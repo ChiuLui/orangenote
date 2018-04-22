@@ -2,6 +2,7 @@ package com.orange.orangenote;
 
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.Intent;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -13,6 +14,7 @@ import android.widget.Toast;
 
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.util.ContentUtil;
+import com.orange.orangenote.util.DateUtil;
 
 import java.util.List;
 
@@ -53,11 +55,26 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder>{
             mContext = parent.getContext();
         }
         View view = LayoutInflater.from(mContext).inflate(R.layout.note_item, parent, false);
-        ViewHolder viewHolder = new ViewHolder(view);
+        final ViewHolder viewHolder = new ViewHolder(view);
         viewHolder.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(mContext, "编辑界面", Toast.LENGTH_SHORT).show();
+                int position = viewHolder.getAdapterPosition();
+                Note note = mNoteList.get(position);
+                Intent intent = new Intent(mContext, NewNote.class);
+                int nowId = note.getId();
+                String nowYear = note.getYear();
+                String nowDate = note.getDate();
+                String nowTime = note.getTime();
+                String nowContent = note.getContent();
+                boolean nowState = true;
+                intent.putExtra("nowId", nowId);
+                intent.putExtra("nowYear", nowYear);
+                intent.putExtra("nowDate", nowDate);
+                intent.putExtra("nowTime", nowTime);
+                intent.putExtra("nowContent", nowContent);
+                intent.putExtra("nowState", nowState);
+                mContext.startActivity(intent);
             }
         });
         return viewHolder;

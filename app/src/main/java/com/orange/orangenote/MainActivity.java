@@ -94,9 +94,13 @@ public class MainActivity extends AppCompatActivity {
                 String nowYear = DateUtil.getNowYear();
                 String nowDate = DateUtil.getNowDate();
                 String nowTime = DateUtil.getNowTiem();
+                String nowContent = "";
+                boolean nowState = false;
                 intent.putExtra("nowYear", nowYear);
                 intent.putExtra("nowDate", nowDate);
                 intent.putExtra("nowTime", nowTime);
+                intent.putExtra("nowContent", nowContent);
+                intent.putExtra("nowState", nowState);
                 startActivity(intent);
             }
         });

@@ -9,6 +9,8 @@ package com.orange.orangenote.util;
 
 public class ContentUtil {
 
+    private static final int LENGHT = 20;
+
     /**
      * 把一段字符串截取成要显示的标题
      * @param content
@@ -22,11 +24,11 @@ public class ContentUtil {
         } else {
             //---没换行符
             //长度小于20个字,直接返回
-            if (temp.length() < 20){
+            if (temp.length() < LENGHT){
                 return temp;
             } else {
                 //否则截取前20个字
-                return temp.substring(0,20);
+                return temp.substring(0,LENGHT);
             }
         }
     }
@@ -50,7 +52,7 @@ public class ContentUtil {
                      return "";
                  }
              } else {
-                 if (content.substring(0,content.indexOf("\n")).length() > 20) {
+                 if (content.substring(0,content.indexOf("\n")).length() > LENGHT) {
                      return "..." + temp;
                  } else {
                      return temp;
@@ -58,10 +60,10 @@ public class ContentUtil {
              }
         } else {
             //没换行符
-            if (temp.length() < 20){
+            if (temp.length() < LENGHT){
                 return "";
             } else {
-                return temp.substring(20);
+                return temp.substring(LENGHT);
             }
         }
     }
