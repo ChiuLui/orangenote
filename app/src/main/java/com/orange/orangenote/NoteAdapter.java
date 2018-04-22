@@ -65,11 +65,15 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder>{
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-
         Note note = mNoteList.get(position);
         String temp = note.getContent();
         holder.textView_title.setText(ContentUtil.getTitle(temp));
         holder.textView_content.setText(ContentUtil.getContent(temp));
+        if (holder.textView_content.getText().length() <= 0 || holder.textView_content.getText().equals("") || holder.textView_content.getText() == null || holder.textView_content.getText().equals(" ") || holder.textView_content.getText().equals("\n")){
+            holder.textView_content.setVisibility(View.GONE);
+        } else {
+            holder.textView_content.setVisibility(View.VISIBLE);
+        }
         holder.textView_time.setText(note.getYear() + "  " + note.getDate() + "  " + note.getTime());
     }
 

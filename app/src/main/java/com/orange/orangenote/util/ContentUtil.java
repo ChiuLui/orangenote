@@ -9,26 +9,61 @@ package com.orange.orangenote.util;
 
 public class ContentUtil {
 
+    /**
+     * 把一段字符串截取成要显示的标题
+     * @param content
+     * @return
+     */
     public static String getTitle(String content){
         String temp = content;
-        //截取的长度 < 20 后面还有
-        //
-        if ((temp.substring(0,temp.indexOf("\n"))).length() < 20 && temp.length() > (temp.substring(0,temp.indexOf("\n"))).length()){
+        //---有换行符
+        if (temp.contains("\n")){
             return temp.substring(0,temp.indexOf("\n"));
         } else {
-            return temp;
+            //---没换行符
+            //长度小于20个字,直接返回
+            if (temp.length() < 20){
+                return temp;
+            } else {
+                //否则截取前20个字
+                return temp.substring(0,20);
+            }
         }
     }
 
+    /**
+     * 把一段字符串截取成要显示的内容概略
+     * @param content
+     * @return
+     */
     public static String getContent(String content){
         String temp = content;
-        //截取的长度 < 20 后面还有
-        if ((temp.substring(0,temp.indexOf("\n"))).length() < 20 && temp.length() > (temp.substring(0,temp.indexOf("\n"))).length()){
-            return temp.substring(temp.indexOf("\n"));
-        } else if (temp.length() < 20){//截取长度的 < 20 后面没有了
-            return "";
+        //---有换行符
+        if (temp.contains("\n")){
+            //截取换行符后面的文字
+             temp = temp.substring(temp.indexOf("\n")+1);//+1是因为不截取换行符
+             if (temp.contains("\n")){
+                 temp = temp.substring(0,temp.indexOf("\n"));
+                 if (temp.length() > 0) {
+                     return temp;
+                 } else {
+                     return "";
+                 }
+             } else {
+                 if (content.substring(0,content.indexOf("\n")).length() > 20) {
+                     return "..." + temp;
+                 } else {
+                     return temp;
+                 }
+             }
+        } else {
+            //没换行符
+            if (temp.length() < 20){
+                return "";
+            } else {
+                return temp.substring(20);
+            }
         }
-        return temp;
     }
 
 }
