@@ -1,5 +1,6 @@
 package com.orange.orangenote;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
@@ -9,6 +10,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -16,6 +18,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,6 +29,7 @@ import com.orange.orangenote.util.DateUtil;
 
 import org.litepal.crud.DataSupport;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -45,10 +49,17 @@ public class MainActivity extends AppCompatActivity {
 
     private NoteAdapter adapter;
 
-    private List<Note> noteList ;
+    private List<Note> noteList;
 
     //得到ActionBar的实例
     private ActionBar actionBar;
+
+    public static boolean isDelete = false;
+
+    public static List<Integer> deleteposition;
+
+    public static List<Note> deleteNote;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,10 +82,11 @@ public class MainActivity extends AppCompatActivity {
         layoutManager.setStackFromEnd(true);//列表再底部开始展示，反转后由上面开始展示
         layoutManager.setReverseLayout(true);//列表翻转
         recyclerView.setLayoutManager(layoutManager);
-        noteList = DataSupport.findAll(Note.class);
+        recordAdapter();
 
-        adapter = new NoteAdapter(MainActivity.this, noteList);
-        recyclerView.setAdapter(adapter);
+        deleteposition = new ArrayList<>();
+
+        deleteNote = new ArrayList<>();
 
         //设置toolbar和Actionbar一样效果
         setSupportActionBar(toolbar_main);
@@ -118,10 +130,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
     }
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -143,12 +152,47 @@ public class MainActivity extends AppCompatActivity {
                 drawerLayout_main.openDrawer(GravityCompat.START);
                 break;
             case R.id.delete_toolbar:
-                Snackbar.make(coordinatorLayout, "已删除ToDo", Snackbar.LENGTH_SHORT).setAction("恢复", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(MainActivity.this, "功能未完成,敬请期待.", Toast.LENGTH_SHORT).show();
+                //如果待删除数组不为空
+                if (deleteNote != null && deleteNote.size() > 0) {
+                    //弹出dialog提示框
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+                    dialog.setTitle("删除便签");
+                    dialog.setMessage("确认要删除所选的 " + deleteNote.size() + " 条便签吗?");
+                    dialog.setCancelable(true);
+                    dialog.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            //点击确定
+                            if (isDelete) {
+                                //把退出删除模式
+                                isDelete = false;
+                            }
+                            //遍历待删除列表
+                            for (Note note : deleteNote) {
+                                //删除列表中的对象
+                                adapter.deleteNote(note);
+                            }
+                            //清除待删除列表
+                            deleteNote.clear();
+                            //刷新适配器
+                            adapter.notifyDataSetChanged();
+
+                        }
+                    });
+                    dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            //点击取消不操作
+                        }
+                    });
+                    dialog.show();
+                } else {
+                    //不满足条件的话, 只退出删除模式, 刷新视图
+                    if (isDelete) {
+                        isDelete = false;
                     }
-                }).show();
+                    adapter.notifyDataSetChanged();
+                }
                 break;
             case R.id.settings_toolbar:
 
@@ -160,8 +204,41 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        recordAdapter();
+    }
+
+    /**
+     * 刷新适配器
+     */
+    private void recordAdapter() {
         noteList = DataSupport.findAll(Note.class);
         adapter = new NoteAdapter(MainActivity.this, noteList);
         recyclerView.setAdapter(adapter);
     }
+
+    /**
+     * 监听回退键
+     *
+     * @param keyCode
+     * @param event
+     * @return
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        super.onKeyDown(keyCode, event);
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                //当处于删除模式, 消费回退键, 退出删除模式
+                if (isDelete) {
+                    isDelete = false;
+                    deleteNote.clear();//清除待删除列表
+                    adapter.notifyDataSetChanged();
+                    return false;
+                }
+                break;
+        }
+        return true;
+    }
+
+
 }
