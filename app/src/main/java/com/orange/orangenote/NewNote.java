@@ -156,6 +156,13 @@ public class NewNote extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.delete_toolbar).setVisible(true);
+        menu.findItem(R.id.settings_toolbar).setVisible(false);
+        return super.onPrepareOptionsMenu(menu);
+    }
+
     /**
      * 当ToolBar被点击
      *

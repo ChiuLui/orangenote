@@ -60,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
 
     public static List<Note> deleteNote;
 
+    public static Menu menu;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,6 +141,15 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if (!isDelete){
+            menu.findItem(R.id.delete_toolbar).setVisible(false);
+        }
+        this.menu = menu;
+        return super.onPrepareOptionsMenu(menu);
+    }
+
     /**
      * 当ToolBar被点击
      *
@@ -166,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
                             if (isDelete) {
                                 //把退出删除模式
                                 isDelete = false;
+                                menu.findItem(R.id.delete_toolbar).setVisible(false);
                             }
                             //遍历待删除列表
                             for (Note note : deleteNote) {
@@ -190,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
                     //不满足条件的话, 只退出删除模式, 刷新视图
                     if (isDelete) {
                         isDelete = false;
+                        menu.findItem(R.id.delete_toolbar).setVisible(false);
                     }
                     adapter.notifyDataSetChanged();
                 }
@@ -214,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
         noteList = DataSupport.findAll(Note.class);
         adapter = new NoteAdapter(MainActivity.this, noteList);
         recyclerView.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
     }
 
     /**
@@ -231,6 +245,7 @@ public class MainActivity extends AppCompatActivity {
                 //当处于删除模式, 消费回退键, 退出删除模式
                 if (isDelete) {
                     isDelete = false;
+                    menu.findItem(R.id.delete_toolbar).setVisible(false);
                     deleteNote.clear();//清除待删除列表
                     adapter.notifyDataSetChanged();
                     return false;
@@ -240,5 +255,14 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (isDelete) {
+            isDelete = false;
+            menu.findItem(R.id.delete_toolbar).setVisible(false);
+            deleteNote.clear();//清除待删除列表
+            adapter.notifyDataSetChanged();
+        }
+    }
 }
