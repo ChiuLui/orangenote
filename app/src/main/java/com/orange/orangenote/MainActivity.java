@@ -2,27 +2,26 @@ package com.orange.orangenote;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.util.DateUtil;
@@ -62,12 +61,27 @@ public class MainActivity extends AppCompatActivity {
 
     public static Menu menu;
 
+    public static boolean isListView = true;
+
+    private SharedPreferences.Editor editor;
+
+    private SharedPreferences prefer;
+
+    LinearLayoutManager linearLayoutManager;
+
+    StaggeredGridLayoutManager staggeredGridLayoutManager;
+
+    public static boolean isAllCheck = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        editor = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).edit();
+
+        prefer = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        isListView = prefer.getBoolean("isListView", true);
 
         toolbar_main = findViewById(R.id.toolbar_main);
 
@@ -80,10 +94,19 @@ public class MainActivity extends AppCompatActivity {
         navigationView = findViewById(R.id.nav_view);
 
         recyclerView = findViewById(R.id.recycler_main);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setStackFromEnd(true);//列表再底部开始展示，反转后由上面开始展示
-        layoutManager.setReverseLayout(true);//列表翻转
-        recyclerView.setLayoutManager(layoutManager);
+
+        linearLayoutManager = new LinearLayoutManager(MainActivity.this, LinearLayoutManager.VERTICAL, false);
+
+        staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+//        staggeredGridLayoutManager.setStackFromEnd(true);//列表再底部开始展示，反转后由上面开始展示
+//        staggeredGridLayoutManager.setReverseLayout(true);//列表翻转
+        if (isListView) {
+            recyclerView.setLayoutManager(linearLayoutManager);
+        } else {
+            recyclerView.setLayoutManager(staggeredGridLayoutManager);
+        }
+
+        //设置刷新适配器
         recordAdapter();
 
         deleteposition = new ArrayList<>();
@@ -143,8 +166,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        if (isListView){
+            menu.findItem(R.id.view_toolbar).setIcon(R.drawable.viewgallery);
+        } else {
+            menu.findItem(R.id.view_toolbar).setIcon(R.drawable.viewlist);
+        }
         if (!isDelete){
             menu.findItem(R.id.delete_toolbar).setVisible(false);
+            menu.findItem(R.id.allcheck_toolbar).setVisible(false);
         }
         this.menu = menu;
         return super.onPrepareOptionsMenu(menu);
@@ -162,6 +191,32 @@ public class MainActivity extends AppCompatActivity {
             case android.R.id.home:
                 drawerLayout_main.openDrawer(GravityCompat.START);
                 break;
+            case R.id.view_toolbar:
+                if (isListView) {
+                    recyclerView.setLayoutManager(staggeredGridLayoutManager);
+                    menu.findItem(R.id.view_toolbar).setIcon(R.drawable.viewlist);
+                    isListView = false;
+                } else {
+                    recyclerView.setLayoutManager(linearLayoutManager);
+                    menu.findItem(R.id.view_toolbar).setIcon(R.drawable.viewgallery);
+                    isListView = true;
+                }
+                break;
+                //全选
+            case R.id.allcheck_toolbar:
+                if (isAllCheck){
+                    isAllCheck = false;
+                    deleteNote.clear();
+                    adapter.notifyDataSetChanged();
+                } else {
+                    isAllCheck = true;
+                    deleteNote.clear();
+                    for (Note note : noteList){
+                        deleteNote.add(note);
+                    }
+                    adapter.notifyDataSetChanged();
+                }
+                break;
             case R.id.delete_toolbar:
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
@@ -177,7 +232,9 @@ public class MainActivity extends AppCompatActivity {
                             if (isDelete) {
                                 //把退出删除模式
                                 isDelete = false;
+                                isAllCheck = false;
                                 menu.findItem(R.id.delete_toolbar).setVisible(false);
+                                menu.findItem(R.id.allcheck_toolbar).setVisible(false);
                             }
                             //遍历待删除列表
                             for (Note note : deleteNote) {
@@ -202,13 +259,12 @@ public class MainActivity extends AppCompatActivity {
                     //不满足条件的话, 只退出删除模式, 刷新视图
                     if (isDelete) {
                         isDelete = false;
+                        isAllCheck = false;
                         menu.findItem(R.id.delete_toolbar).setVisible(false);
+                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
                     }
                     adapter.notifyDataSetChanged();
                 }
-                break;
-            case R.id.settings_toolbar:
-
                 break;
         }
         return true;
@@ -224,10 +280,20 @@ public class MainActivity extends AppCompatActivity {
      * 刷新适配器
      */
     private void recordAdapter() {
-        noteList = DataSupport.findAll(Note.class);
-        adapter = new NoteAdapter(MainActivity.this, noteList);
+
+//        noteList = DataSupport.findAll(Note.class);
+        //查询倒序
+        noteList = DataSupport.order("id desc").find(Note.class);
+        adapter = new NoteAdapter(MainActivity.this, this.noteList);
         recyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
+
+        if (isListView) {
+            recyclerView.setLayoutManager(linearLayoutManager);
+        } else {
+            recyclerView.setLayoutManager(linearLayoutManager);
+            recyclerView.setLayoutManager(staggeredGridLayoutManager);
+        }
     }
 
     /**
@@ -245,7 +311,9 @@ public class MainActivity extends AppCompatActivity {
                 //当处于删除模式, 消费回退键, 退出删除模式
                 if (isDelete) {
                     isDelete = false;
+                    isAllCheck = false;
                     menu.findItem(R.id.delete_toolbar).setVisible(false);
+                    menu.findItem(R.id.allcheck_toolbar).setVisible(false);
                     deleteNote.clear();//清除待删除列表
                     adapter.notifyDataSetChanged();
                     return false;
@@ -258,9 +326,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        editor.putBoolean("isListView", isListView);
+        editor.apply();
         if (isDelete) {
             isDelete = false;
+            isAllCheck = false;
             menu.findItem(R.id.delete_toolbar).setVisible(false);
+            menu.findItem(R.id.allcheck_toolbar).setVisible(false);
             deleteNote.clear();//清除待删除列表
             adapter.notifyDataSetChanged();
         }

@@ -1,28 +1,28 @@
 package com.orange.orangenote;
 
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.util.ContentUtil;
-import com.orange.orangenote.util.DateUtil;
+import com.orange.orangenote.util.dp2px;
 
 import org.litepal.crud.DataSupport;
 
 import java.util.List;
 
 /**
+ * 适配器
  * @author 神经大条蕾弟
  * @version 1.0
  * @date 2018/04/21 17:13
@@ -52,6 +52,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         CardView cardView;
+        LinearLayout linearLayout;
         TextView textView_title;
         TextView textView_content;
         TextView textView_itme;
@@ -60,6 +61,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         public ViewHolder(View itemView) {
             super(itemView);
             cardView = (CardView) itemView;
+            linearLayout = itemView.findViewById(R.id.linelayout_item);
             textView_title = itemView.findViewById(R.id.text_item_title);
             textView_content = itemView.findViewById(R.id.text_item_content);
             textView_itme = itemView.findViewById(R.id.text_item_tiem);
@@ -86,6 +88,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                         MainActivity.isDelete = true;
                         //显示删除图标
                         MainActivity.menu.findItem(R.id.delete_toolbar).setVisible(true);
+                        MainActivity.menu.findItem(R.id.allcheck_toolbar).setVisible(true);
                     }
                     notifyDataSetChanged();
                     return true;
@@ -141,12 +144,16 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         String temp = note.getContent();
         holder.textView_title.setText(ContentUtil.getTitle(temp));
         holder.textView_content.setText(ContentUtil.getContent(temp));
+        //当前内容长度是否为空内容, 隐藏或显示, 并且添加内边距补足高度
         if (holder.textView_content.getText().length() <= 0 || holder.textView_content.getText().equals("") || holder.textView_content.getText() == null || holder.textView_content.getText().equals(" ") || holder.textView_content.getText().equals("\n")) {
             holder.textView_content.setVisibility(View.GONE);
+            holder.linearLayout.setPadding(dp2px.dip2px(mContext, 15), dp2px.dip2px(mContext, 27), dp2px.dip2px(mContext, 15), dp2px.dip2px(mContext, 27));
         } else {
             holder.textView_content.setVisibility(View.VISIBLE);
+            holder.linearLayout.setPadding(dp2px.dip2px(mContext, 15), dp2px.dip2px(mContext, 15), dp2px.dip2px(mContext, 15), dp2px.dip2px(mContext, 15));
         }
         holder.textView_itme.setText(note.getYear() + note.getDate() + "  " + note.getTime());
+        //如果当前是否为删除模式, 显示或隐藏复选框
         if (MainActivity.isDelete) {
             holder.checkBox_item.setVisibility(View.VISIBLE);
         } else {
@@ -157,7 +164,20 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
             MainActivity.deleteNote.clear();
             holder.checkBox_item.setChecked(false);
         }
-
+        //当前是否处于ListView视图, 动态改变内容显示的单行还是多行模式
+        if (MainActivity.isListView){
+            holder.textView_content.setEllipsize(TextUtils.TruncateAt.MARQUEE);
+            holder.textView_content.setSingleLine(true);
+        } else {
+            holder.textView_content.setEllipsize(null);
+            holder.textView_content.setSingleLine(false);
+        }
+        //当前checkbox是否为全选状态
+        if (MainActivity.isAllCheck){
+            holder.checkBox_item.setChecked(true);
+        } else {
+            holder.checkBox_item.setChecked(false);
+        }
     }
 
     @Override
