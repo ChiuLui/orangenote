@@ -71,7 +71,10 @@ public class MainActivity extends AppCompatActivity {
 
     StaggeredGridLayoutManager staggeredGridLayoutManager;
 
-    public static boolean isAllCheck = false;
+    public static int isAllCheck = 0;
+    public static final int isAllCheck_NORMAL = 0;
+    public static final int isAllCheck_CHECK = 1;
+    public static final int isAllCheck_UPCHECK = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -174,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
         if (!isDelete){
             menu.findItem(R.id.delete_toolbar).setVisible(false);
             menu.findItem(R.id.allcheck_toolbar).setVisible(false);
+            menu.findItem(R.id.view_toolbar).setVisible(true);
         }
         this.menu = menu;
         return super.onPrepareOptionsMenu(menu);
@@ -204,18 +208,21 @@ public class MainActivity extends AppCompatActivity {
                 break;
                 //全选
             case R.id.allcheck_toolbar:
-                if (isAllCheck){
-                    isAllCheck = false;
-                    deleteNote.clear();
-                    adapter.notifyDataSetChanged();
-                } else {
-                    isAllCheck = true;
+                if (deleteNote.size() != noteList.size()){
+                    isAllCheck = isAllCheck_NORMAL;
+                }
+                if (isAllCheck == isAllCheck_NORMAL){
+                    isAllCheck = isAllCheck_CHECK;
                     deleteNote.clear();
                     for (Note note : noteList){
                         deleteNote.add(note);
                     }
-                    adapter.notifyDataSetChanged();
+                } else if (isAllCheck == isAllCheck_CHECK){
+                    isAllCheck = isAllCheck_UPCHECK;
+                    deleteNote.clear();
+                    isAllCheck = isAllCheck_NORMAL;//把状态重置回正常状态
                 }
+                adapter.notifyDataSetChanged();
                 break;
             case R.id.delete_toolbar:
                 //如果待删除数组不为空
@@ -232,9 +239,10 @@ public class MainActivity extends AppCompatActivity {
                             if (isDelete) {
                                 //把退出删除模式
                                 isDelete = false;
-                                isAllCheck = false;
+                                isAllCheck = isAllCheck_NORMAL;
                                 menu.findItem(R.id.delete_toolbar).setVisible(false);
                                 menu.findItem(R.id.allcheck_toolbar).setVisible(false);
+                                menu.findItem(R.id.view_toolbar).setVisible(true);
                             }
                             //遍历待删除列表
                             for (Note note : deleteNote) {
@@ -259,9 +267,10 @@ public class MainActivity extends AppCompatActivity {
                     //不满足条件的话, 只退出删除模式, 刷新视图
                     if (isDelete) {
                         isDelete = false;
-                        isAllCheck = false;
+                        isAllCheck = isAllCheck_NORMAL;
                         menu.findItem(R.id.delete_toolbar).setVisible(false);
                         menu.findItem(R.id.allcheck_toolbar).setVisible(false);
+                        menu.findItem(R.id.view_toolbar).setVisible(true);
                     }
                     adapter.notifyDataSetChanged();
                 }
@@ -311,9 +320,10 @@ public class MainActivity extends AppCompatActivity {
                 //当处于删除模式, 消费回退键, 退出删除模式
                 if (isDelete) {
                     isDelete = false;
-                    isAllCheck = false;
+                    isAllCheck = isAllCheck_NORMAL;
                     menu.findItem(R.id.delete_toolbar).setVisible(false);
                     menu.findItem(R.id.allcheck_toolbar).setVisible(false);
+                    menu.findItem(R.id.view_toolbar).setVisible(true);
                     deleteNote.clear();//清除待删除列表
                     adapter.notifyDataSetChanged();
                     return false;
@@ -330,9 +340,10 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
         if (isDelete) {
             isDelete = false;
-            isAllCheck = false;
+            isAllCheck = isAllCheck_NORMAL;
             menu.findItem(R.id.delete_toolbar).setVisible(false);
             menu.findItem(R.id.allcheck_toolbar).setVisible(false);
+            menu.findItem(R.id.view_toolbar).setVisible(true);
             deleteNote.clear();//清除待删除列表
             adapter.notifyDataSetChanged();
         }

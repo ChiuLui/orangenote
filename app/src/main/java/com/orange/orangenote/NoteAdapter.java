@@ -85,8 +85,10 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                     int position = viewHolder.getAdapterPosition();
                     Note note = mNoteList.get(position);
                     if (!MainActivity.isDelete) {
+                        MainActivity.deleteNote.clear();
                         MainActivity.isDelete = true;
-                        //显示删除图标
+                        //隐藏切换布局图标  显示删除图标
+                        MainActivity.menu.findItem(R.id.view_toolbar).setVisible(false);
                         MainActivity.menu.findItem(R.id.delete_toolbar).setVisible(true);
                         MainActivity.menu.findItem(R.id.allcheck_toolbar).setVisible(true);
                     }
@@ -172,10 +174,10 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
             holder.textView_content.setEllipsize(null);
             holder.textView_content.setSingleLine(false);
         }
-        //当前checkbox是否为全选状态
-        if (MainActivity.isAllCheck){
+        //判断是全选状态还是取消全选状态.
+        if (MainActivity.isAllCheck == MainActivity.isAllCheck_CHECK){
             holder.checkBox_item.setChecked(true);
-        } else {
+        } else if (MainActivity.isAllCheck == MainActivity.isAllCheck_UPCHECK) {
             holder.checkBox_item.setChecked(false);
         }
     }
