@@ -1,6 +1,10 @@
 package com.orange.orangenote;
 
 import android.annotation.SuppressLint;
+import android.app.AlarmManager;
+import android.app.DatePickerDialog;
+import android.app.PendingIntent;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -18,7 +22,9 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.orange.orangenote.db.Note;
@@ -26,6 +32,9 @@ import com.orange.orangenote.util.DateUtil;
 import com.orange.orangenote.util.StringToAscii;
 
 import org.litepal.crud.DataSupport;
+
+import java.util.Calendar;
+import java.util.TimeZone;
 
 public class NewNote extends AppCompatActivity {
 
@@ -53,11 +62,20 @@ public class NewNote extends AppCompatActivity {
 
     private SharedPreferences prefer;
 
+    private int mYear, mMonth, mDay, mDateStr;
+    private Calendar calender;
+
+    public static boolean isRemind = false;
+
+    private Menu menu;
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_note);
+
+        calender = Calendar.getInstance();
 
         //接收Intent
         final Intent intent = getIntent();
@@ -148,6 +166,7 @@ public class NewNote extends AppCompatActivity {
 
 
     public boolean onCreateOptionsMenu(Menu menu) {
+        this.menu = menu;
         //加载菜单文件
         getMenuInflater().inflate(R.menu.toolbar, menu);
         return true;
@@ -158,6 +177,12 @@ public class NewNote extends AppCompatActivity {
         menu.findItem(R.id.delete_toolbar).setVisible(true);
         menu.findItem(R.id.view_toolbar).setVisible(false);
         menu.findItem(R.id.allcheck_toolbar).setVisible(false);
+        menu.findItem(R.id.remind_toolbar).setVisible(true);
+        if (isRemind){
+            menu.findItem(R.id.remind_toolbar).setIcon(R.drawable.unclock);
+        } else {
+            menu.findItem(R.id.remind_toolbar).setIcon(R.drawable.clock);
+        }
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -174,6 +199,14 @@ public class NewNote extends AppCompatActivity {
             case android.R.id.home:
                 saveToDatabast();
                 finish();
+                break;
+            //提醒功能
+            case R.id.remind_toolbar:
+                if (!isRemind) {
+                    setRemind();
+                } else {
+                    stopRemind(nowId);
+                }
                 break;
             //删除键被点击
             case R.id.delete_toolbar:
@@ -196,6 +229,140 @@ public class NewNote extends AppCompatActivity {
                 break;
         }
         return true;
+    }
+
+    private void setRemind() {
+        //调用日期Dialog
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this, new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, final int month, int dayOfMonth) {
+
+                mYear = year;
+                mMonth = month;
+                mDay = dayOfMonth;
+
+                //调用时间Dialog
+                TimePickerDialog dialog = new TimePickerDialog(NewNote.this, new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                        String monthOfYear = mMonth + "";
+                        String dayOfMonth = mDay + "";
+                        if (mMonth < 10) {
+                            monthOfYear = "0" + mMonth;
+                        }
+                        if (mDay < 10) {
+                            dayOfMonth = "0" + mDay;
+                        }
+
+                        Toast.makeText(NewNote.this, "已设置提醒" + mYear + "年" + monthOfYear + 1 + "月" + dayOfMonth + "日" + " " + hourOfDay + ":" + minute, Toast.LENGTH_SHORT).show();
+                        //更变状态
+                        isRemind = true;
+                        //更换图标
+                        menu.findItem(R.id.remind_toolbar).setIcon(R.drawable.unclock);
+                        //设置定时任务
+                        startRemind(mYear, mMonth, mDay, hourOfDay, minute);
+
+                    }
+                }, calender.get(Calendar.HOUR), calender.get(Calendar.MINUTE), true);
+                dialog.show();
+
+            }
+        }, calender.get(Calendar.YEAR), calender.get(Calendar.MONTH),
+                calender.get(Calendar.DAY_OF_MONTH));
+        //设置显示的最小日期
+        Calendar minCalendar = Calendar.getInstance();
+        minCalendar.set(Calendar.YEAR, calender.get(Calendar.YEAR));
+        minCalendar.set(Calendar.MONTH, calender.get(Calendar.MONTH));
+        minCalendar.set(Calendar.DAY_OF_MONTH, calender.get(Calendar.DAY_OF_MONTH));
+//        datePickerDialog.setTitle("设置日期");
+        datePickerDialog.getDatePicker().setMinDate(minCalendar.getTimeInMillis());
+        //显示Dialog
+        datePickerDialog.show();
+    }
+
+    /**
+     * 设置提醒
+     *
+     * @param year
+     * @param month
+     * @param day
+     * @param hour
+     * @param minute
+     */
+    private void startRemind(int year, int month, int day, int hour, int minute) {
+        Log.e("TAG", "startRemind()" + "已设置提醒" + mYear + "年" + month + "月" + day + "日" + " " + hour + ":" + minute );
+        //得到日历实例，主要是为了下面的获取时间
+        Calendar mCalendar = Calendar.getInstance();
+//        mCalendar.setTimeInMillis(System.currentTimeMillis());
+
+//        //获取当前毫秒值
+//        long systemTime = System.currentTimeMillis();
+
+//        //是设置日历的时间，主要是让日历的年月日和当前同步
+//        mCalendar.setTimeInMillis(System.currentTimeMillis());
+        //设置日期
+        mCalendar.set(Calendar.YEAR, year);
+        mCalendar.set(Calendar.MONTH, month);
+        mCalendar.set(Calendar.DAY_OF_MONTH, day);
+        // 这里时区需要设置一下，不然可能个别手机会有8个小时的时间差
+        mCalendar.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        //设置在几点提醒  设置的为传进来的 hour点
+        mCalendar.set(Calendar.HOUR_OF_DAY, hour);
+        //设置在几分提醒  设置的为传进来的 minute分
+        mCalendar.set(Calendar.MINUTE, minute);
+        //下面这两个看字面意思也知道
+        mCalendar.set(Calendar.SECOND, 0);
+        mCalendar.set(Calendar.MILLISECOND, 0);
+
+        //上面设置的就是日期和时间
+
+//        //获取上面设置的 时间 的毫秒值
+//        long selectTime = mCalendar.getTimeInMillis();
+//
+//        // 如果当前时间大于设置的时间，那么就从第二天的设定时间开始
+//        if(systemTime > selectTime) {
+//            mCalendar.add(Calendar.DAY_OF_MONTH, 1);
+//        }
+
+        //AlarmReceiver.class为广播接受者
+        Intent intent = new Intent(NewNote.this, RemindReceiver.class);
+        intent.putExtra("nowId", nowId);
+        intent.putExtra("nowYear", nowYear);
+        intent.putExtra("nowDate", nowDate);
+        intent.putExtra("nowTime", nowTime);
+        intent.putExtra("nowContent", nowContent);
+        intent.putExtra("nowState", nowState);
+        PendingIntent pi = PendingIntent.getBroadcast(NewNote.this, nowId, intent, 0);
+        //得到AlarmManager实例
+        AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+
+        //**********注意！！下面的两个根据实际需求任选其一即可*********
+
+        /**
+         * 单次提醒
+         * mCalendar.getTimeInMillis() 上面设置时间的毫秒值
+         */
+        am.setExact(AlarmManager.RTC_WAKEUP, mCalendar.getTimeInMillis(), pi);
+        Log.e("TAG", "startRemind() 设置定时任务!!");
+    }
+
+    /**
+     * 取消提醒
+     */
+    public void stopRemind(int requestCode) {
+
+        Intent intent = new Intent(NewNote.this, RemindReceiver.class);
+        PendingIntent pi = PendingIntent.getBroadcast(NewNote.this, requestCode,
+                intent, 0);
+        AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+        //取消警报
+        am.cancel(pi);
+        Toast.makeText(this, "关闭了提醒", Toast.LENGTH_SHORT).show();
+        //更换图标
+        menu.findItem(R.id.remind_toolbar).setIcon(R.drawable.clock);
+        //更换状态
+        isRemind = false;
+
     }
 
     /**

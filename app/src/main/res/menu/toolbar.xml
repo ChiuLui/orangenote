@@ -7,6 +7,11 @@
         android:title="切换视图"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/remind_toolbar"
+        android:icon="@drawable/clock"
+        android:title="提醒"
+        app:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/delete_toolbar"
         android:icon="@drawable/delete"
         android:title="删除"

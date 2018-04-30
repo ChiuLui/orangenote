@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.orange.orangenote">
 
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
     <application
         android:name="org.litepal.LitePalApplication"
         android:allowBackup="true"
@@ -10,14 +12,19 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.orange.orangenote.MainActivity">
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.orange.orangenote.NewNote"></activity>
+        <activity android:name=".NewNote" />
+
+        <receiver
+            android:name=".RemindReceiver"
+            android:enabled="true"
+            android:exported="true"></receiver>
     </application>
 
 </manifest>

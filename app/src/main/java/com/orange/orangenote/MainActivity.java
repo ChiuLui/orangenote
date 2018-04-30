@@ -169,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        this.menu = menu;
         if (isListView){
             menu.findItem(R.id.view_toolbar).setIcon(R.drawable.viewgallery);
         } else {
@@ -179,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
             menu.findItem(R.id.allcheck_toolbar).setVisible(false);
             menu.findItem(R.id.view_toolbar).setVisible(true);
         }
-        this.menu = menu;
+        menu.findItem(R.id.remind_toolbar).setVisible(false);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -224,6 +225,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 adapter.notifyDataSetChanged();
                 break;
+                //删除
             case R.id.delete_toolbar:
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
