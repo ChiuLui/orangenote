@@ -115,12 +115,14 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                     String nowTime = note.getTime();
                     String nowContent = note.getContent();
                     boolean nowState = true;
+                    boolean isRemind = note.getRemind();
                     intent.putExtra("nowId", nowId);
                     intent.putExtra("nowYear", nowYear);
                     intent.putExtra("nowDate", nowDate);
                     intent.putExtra("nowTime", nowTime);
                     intent.putExtra("nowContent", nowContent);
                     intent.putExtra("nowState", nowState);
+                    intent.putExtra("isRemind", isRemind);
                     mContext.startActivity(intent);
                 } else {
                     //在删除模式下

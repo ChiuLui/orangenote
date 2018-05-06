@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -62,12 +63,14 @@ public class NewNote extends AppCompatActivity {
 
     private SharedPreferences prefer;
 
-    private int mYear, mMonth, mDay, mDateStr;
+    private int mYear, mMonth, mDay;
     private Calendar calender;
 
-    public static boolean isRemind = false;
+    public static boolean isRemind;
 
     private Menu menu;
+
+    public static TextView textView_toolbar;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -85,6 +88,7 @@ public class NewNote extends AppCompatActivity {
         nowTime = intent.getStringExtra("nowTime");
         nowContent = intent.getStringExtra("nowContent");
         nowState = intent.getBooleanExtra("nowState", false);
+        isRemind = intent.getBooleanExtra("isRemind", false);
 
         collapsingToolbarLayout = findViewById(R.id.collapsingtoolbar_newnote);
         collapsingToolbarLayout.setTitle(nowDate + " " + nowTime);
@@ -92,6 +96,8 @@ public class NewNote extends AppCompatActivity {
         editText = findViewById(R.id.edit_newnote_content);
 
         editText.setText(nowContent);
+
+        textView_toolbar = findViewById(R.id.textview_toolbar_newnote);
 
         //如果传进来的标志为旧便签就不显示光标
         if (nowState) {
@@ -180,8 +186,12 @@ public class NewNote extends AppCompatActivity {
         menu.findItem(R.id.remind_toolbar).setVisible(true);
         if (isRemind){
             menu.findItem(R.id.remind_toolbar).setIcon(R.drawable.unclock);
+            showRemindTime();
         } else {
             menu.findItem(R.id.remind_toolbar).setIcon(R.drawable.clock);
+            //隐藏提醒时间
+            textView_toolbar.setText("");
+            textView_toolbar.setVisibility(View.GONE);
         }
         return super.onPrepareOptionsMenu(menu);
     }
@@ -203,9 +213,11 @@ public class NewNote extends AppCompatActivity {
             //提醒功能
             case R.id.remind_toolbar:
                 if (!isRemind) {
+                    saveToDatabast();
                     setRemind();
                 } else {
                     stopRemind(nowId);
+                    Toast.makeText(this, "提醒已关闭", Toast.LENGTH_SHORT).show();
                 }
                 break;
             //删除键被点击
@@ -245,23 +257,22 @@ public class NewNote extends AppCompatActivity {
                 TimePickerDialog dialog = new TimePickerDialog(NewNote.this, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                        String monthOfYear = mMonth + "";
-                        String dayOfMonth = mDay + "";
-                        if (mMonth < 10) {
-                            monthOfYear = "0" + mMonth;
-                        }
-                        if (mDay < 10) {
-                            dayOfMonth = "0" + mDay;
-                        }
-
-                        Toast.makeText(NewNote.this, "已设置提醒" + mYear + "年" + monthOfYear + 1 + "月" + dayOfMonth + "日" + " " + hourOfDay + ":" + minute, Toast.LENGTH_SHORT).show();
-                        //更变状态
+                        //在数据库更新状态
                         isRemind = true;
+                        Note note = DataSupport.find(Note.class, nowId);
+                        note.setRemind(isRemind);
+                        note.setYearRemind(mYear);
+                        note.setMonthRemind(mMonth);
+                        note.setDayRemind(mDay);
+                        note.setHourRemind(hourOfDay);
+                        note.setMinuteRemind(minute);
+                        note.save();
                         //更换图标
                         menu.findItem(R.id.remind_toolbar).setIcon(R.drawable.unclock);
                         //设置定时任务
                         startRemind(mYear, mMonth, mDay, hourOfDay, minute);
-
+                        //显示提示时间
+                        showRemindTime();
                     }
                 }, calender.get(Calendar.HOUR), calender.get(Calendar.MINUTE), true);
                 dialog.show();
@@ -296,7 +307,7 @@ public class NewNote extends AppCompatActivity {
 //        mCalendar.setTimeInMillis(System.currentTimeMillis());
 
 //        //获取当前毫秒值
-//        long systemTime = System.currentTimeMillis();
+        long systemTime = System.currentTimeMillis();
 
 //        //是设置日历的时间，主要是让日历的年月日和当前同步
 //        mCalendar.setTimeInMillis(System.currentTimeMillis());
@@ -316,7 +327,7 @@ public class NewNote extends AppCompatActivity {
 
         //上面设置的就是日期和时间
 
-//        //获取上面设置的 时间 的毫秒值
+        //        //获取上面设置的 时间 的毫秒值
 //        long selectTime = mCalendar.getTimeInMillis();
 //
 //        // 如果当前时间大于设置的时间，那么就从第二天的设定时间开始
@@ -343,7 +354,21 @@ public class NewNote extends AppCompatActivity {
          * mCalendar.getTimeInMillis() 上面设置时间的毫秒值
          */
         am.setExact(AlarmManager.RTC_WAKEUP, mCalendar.getTimeInMillis(), pi);
-        Log.e("TAG", "startRemind() 设置定时任务!!");
+                //获取上面设置的 时间 的毫秒值
+        long selectTime = mCalendar.getTimeInMillis();
+
+        // 如果当前时间小于设置的时间，(合法)那么就弹出提示框
+        if(systemTime < selectTime) {
+            String h = hour + "";
+            String m = minute + "";
+            if (hour < 10) {
+                h = "0" + hour;
+            }
+            if (minute < 10) {
+                m = "0" + minute;
+            }
+            Toast.makeText(this, "将会在: " + mYear + "年" + ++month  + "月" + day + "日" + " " + h + ":" + m + " 提醒您", Toast.LENGTH_LONG).show();
+        }
     }
 
     /**
@@ -357,12 +382,80 @@ public class NewNote extends AppCompatActivity {
         AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
         //取消警报
         am.cancel(pi);
-        Toast.makeText(this, "关闭了提醒", Toast.LENGTH_SHORT).show();
         //更换图标
         menu.findItem(R.id.remind_toolbar).setIcon(R.drawable.clock);
+        //隐藏提醒时间
+        textView_toolbar.setText("");
+        textView_toolbar.setVisibility(View.GONE);
         //更换状态
         isRemind = false;
+        //数据库更新状态
+        Note note = DataSupport.find(Note.class, nowId);
+        note.setRemind(isRemind);
+        note.setToDefault("yearRemind");
+        note.setToDefault("monthRemind");
+        note.setToDefault("dayRemind");
+        note.setToDefault("hourRemind");
+        note.setToDefault("minuteRemind");
+        note.save();
+    }
 
+    /**
+     * 显示提示时间的方法
+     */
+    private void showRemindTime() {
+        //显示提示时间
+        Calendar calendar = Calendar.getInstance();
+        Note note = DataSupport.find(Note.class, nowId);
+        String hour = note.getHourRemind() + "";
+        String minute = note.getMinuteRemind() + "";
+        if (note.getHourRemind() < 10) {
+            hour = "0" + note.getHourRemind();
+        }
+        if (note.getMinuteRemind() < 10) {
+            minute = "0" + note.getMinuteRemind();
+        }
+        //同年
+        if (note.getYearRemind() == calendar.get(Calendar.YEAR)){
+            //同月
+            if (note.getMonthRemind() == calendar.get(Calendar.MONTH)){
+                //同日
+                if (note.getDayRemind() == calendar.get(Calendar.DAY_OF_MONTH)){
+                    //同小时
+                    if (note.getHourRemind() == calendar.get(Calendar.HOUR_OF_DAY)){
+                        //同分钟
+                        if (note.getMinuteRemind() <= calendar.get(Calendar.MINUTE)) {
+                            Toast.makeText(this, "请选择大于当前的时间", Toast.LENGTH_SHORT).show();
+                            stopRemind(nowId);
+//                            textView_toolbar.setText("明天" + note.getHourRemind() + ":" + note.getMinuteRemind());
+                        } else {
+                            textView_toolbar.setText(note.getMinuteRemind() - calendar.get(Calendar.MINUTE) + "分钟后");
+                        }
+                    } else {
+                        if (note.getHourRemind() <= calendar.get(Calendar.HOUR_OF_DAY)){
+                            Toast.makeText(this, "请选择大于当前的时间", Toast.LENGTH_SHORT).show();
+                            stopRemind(nowId);
+//                            textView_toolbar.setText("明天" + note.getHourRemind() + ":" + note.getMinuteRemind());
+                        } else {
+                            textView_toolbar.setText("今天" + hour + ":" + minute);
+                        }
+                    }
+                } else {
+                    if (note.getDayRemind() - calendar.get(Calendar.DAY_OF_MONTH) == 1){
+                        textView_toolbar.setText("明天" + hour + ":" + minute);
+                    } else if (note.getDayRemind() - calendar.get(Calendar.DAY_OF_MONTH) == 2){
+                        textView_toolbar.setText("后天" + hour + ":" + minute);
+                    } else {
+                        textView_toolbar.setText(note.getMonthRemind() + 1 + "月" + note.getDayRemind() + "日" + hour + ":" + minute);
+                    }
+                }
+            } else {
+                textView_toolbar.setText(note.getMonthRemind() + 1 + "月" + note.getDayRemind() + "日" + hour + ":" + minute);
+            }
+        } else {
+            textView_toolbar.setText(note.getYearRemind() + "日" + note.getMonthRemind() + 1 + "月" + note.getDayRemind() + "日" + hour + ":" + minute);
+        }
+        textView_toolbar.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -383,4 +476,5 @@ public class NewNote extends AppCompatActivity {
         }
         return true;
     }
+
 }

@@ -10,8 +10,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.util.Log;
+import android.view.View;
 
+import com.orange.orangenote.db.Note;
 import com.orange.orangenote.util.ContentUtil;
+
+import org.litepal.crud.DataSupport;
 
 import java.io.File;
 
@@ -70,6 +74,16 @@ public class RemindReceiver extends BroadcastReceiver {
         manager.notify(nowId, notification);
 
         NewNote.isRemind = false;
-
+        Note note = DataSupport.find(Note.class, nowId);
+        note.setRemind(false); // raise the price
+        note.setToDefault("yearRemind");
+        note.setToDefault("monthRemind");
+        note.setToDefault("dayRemind");
+        note.setToDefault("hourRemind");
+        note.setToDefault("minuteRemind");
+        note.save();
+        //隐藏提示文本
+        NewNote.textView_toolbar.setText("");
+        NewNote.textView_toolbar.setVisibility(View.GONE);
     }
 }

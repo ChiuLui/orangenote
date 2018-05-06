@@ -21,6 +21,66 @@ public class Note extends DataSupport {
 
     private String content;
 
+    private Boolean isRemind;
+
+    private int yearRemind;
+
+    private int monthRemind;
+
+    private int dayRemind;
+
+    private int hourRemind;
+
+    private int minuteRemind;
+
+    public int getYearRemind() {
+        return yearRemind;
+    }
+
+    public void setYearRemind(int yearRemind) {
+        this.yearRemind = yearRemind;
+    }
+
+    public int getMonthRemind() {
+        return monthRemind;
+    }
+
+    public void setMonthRemind(int monthRemind) {
+        this.monthRemind = monthRemind;
+    }
+
+    public int getDayRemind() {
+        return dayRemind;
+    }
+
+    public void setDayRemind(int dayRemind) {
+        this.dayRemind = dayRemind;
+    }
+
+    public int getHourRemind() {
+        return hourRemind;
+    }
+
+    public void setHourRemind(int hourRemind) {
+        this.hourRemind = hourRemind;
+    }
+
+    public int getMinuteRemind() {
+        return minuteRemind;
+    }
+
+    public void setMinuteRemind(int minuteRemind) {
+        this.minuteRemind = minuteRemind;
+    }
+
+    public Boolean getRemind() {
+        return isRemind;
+    }
+
+    public void setRemind(Boolean remind) {
+        isRemind = remind;
+    }
+
     public int getId() {
         return id;
     }
