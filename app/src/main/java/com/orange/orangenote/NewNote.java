@@ -1,17 +1,25 @@
 package com.orange.orangenote;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -34,8 +42,10 @@ import com.orange.orangenote.util.StringToAscii;
 
 import org.litepal.crud.DataSupport;
 
+import java.security.Permissions;
 import java.util.Calendar;
 import java.util.TimeZone;
+
 
 public class NewNote extends AppCompatActivity {
 
@@ -167,7 +177,9 @@ public class NewNote extends AppCompatActivity {
         }
         //如果旧便签修改了变成空便签, 就从数据库删除
         if ((editText.getText()).length() <= 0 || editText.getText().equals("") || editText.getText() == null || editText.getText().equals(" ") || editText.getText().equals("\n")) {
-            stopRemind(nowId);
+            if (isRemind) {
+                stopRemind(nowId);
+            }
             DataSupport.deleteAll(Note.class, "id = ?", nowId + "");
         }
     }
@@ -215,8 +227,42 @@ public class NewNote extends AppCompatActivity {
             //提醒功能
             case R.id.remind_toolbar:
                 if (!isRemind) {
-                    saveToDatabast();
-                    setRemind();
+//                    if (ContextCompat.checkSelfPermission(NewNote.this, Manifest.permission.SYSTEM_ALERT_WINDOW) != PackageManager.PERMISSION_GRANTED){
+//                        ActivityCompat.requestPermissions(NewNote.this, new String[]{Manifest.permission.SYSTEM_ALERT_WINDOW}, 1);
+//                    } else {
+                    if(!Settings.canDrawOverlays(this)){
+                        //没有悬浮窗权限,跳转申请
+                        new AlertDialog.Builder(this)
+                                .setTitle("显示悬浮窗")
+                                .setIcon(R.mipmap.orangenote_circle)
+                                .setMessage("允许显示悬浮窗可在锁屏下提醒.\n否则只能通过通知提醒您.\n 设置步骤:\n 找到“ 橙子便签 ”->显示悬浮窗->允许")
+                                .setPositiveButton("去设置悬浮窗提醒", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                                        startActivity(intent);
+                                    }
+                                })
+                                .setNegativeButton("通知提醒", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        saveToDatabast();
+                                        setRemind();
+                                    }
+                                })
+                                .setNeutralButton("取消", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                    }
+                                })
+                                .show();
+
+                    } else {
+                        saveToDatabast();
+                        setRemind();
+                    }
+//                    }
                 } else {
                     stopRemind(nowId);
                     Toast.makeText(this, "提醒已关闭", Toast.LENGTH_SHORT).show();
@@ -480,6 +526,20 @@ public class NewNote extends AppCompatActivity {
                 break;
         }
         return true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case 1:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    saveToDatabast();
+                    setRemind();
+                } else {
+                    Toast.makeText(this, "必须允许该权限才能使用提醒功能", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
     }
 
 }

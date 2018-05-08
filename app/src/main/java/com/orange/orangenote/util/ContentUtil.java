@@ -68,4 +68,13 @@ public class ContentUtil {
         }
     }
 
+    public static String getDialogContent(String content){
+        String temp = content;
+        if (content.length() <= 60){
+            return temp;
+        }else {
+            return temp.substring(0,60) + "...";
+        }
+    }
+
 }
