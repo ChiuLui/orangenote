@@ -1,5 +1,7 @@
 package com.orange.orangenote;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -248,6 +250,16 @@ public class MainActivity extends AppCompatActivity {
                             }
                             //遍历待删除列表
                             for (Note note : deleteNote) {
+                                //如果设置了提醒功能
+                                if (note.getRemind()) {
+                                    //取消提醒
+                                    Intent intent = new Intent(MainActivity.this, RemindReceiver.class);
+                                    PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, note.getId(),
+                                            intent, 0);
+                                    AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+                                    //取消警报
+                                    am.cancel(pi);
+                                }
                                 //删除列表中的对象
                                 adapter.deleteNote(note);
                             }

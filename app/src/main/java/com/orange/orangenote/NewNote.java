@@ -163,9 +163,11 @@ public class NewNote extends AppCompatActivity {
             //保存内容
             note.setContent(editText.getText().toString());
             note.save();
+            nowId = note.getId();
         }
         //如果旧便签修改了变成空便签, 就从数据库删除
         if ((editText.getText()).length() <= 0 || editText.getText().equals("") || editText.getText() == null || editText.getText().equals(" ") || editText.getText().equals("\n")) {
+            stopRemind(nowId);
             DataSupport.deleteAll(Note.class, "id = ?", nowId + "");
         }
     }
@@ -244,6 +246,9 @@ public class NewNote extends AppCompatActivity {
     }
 
     private void setRemind() {
+        if ((editText.getText()).length() <= 0 || editText.getText().equals("") || editText.getText() == null || editText.getText().equals(" ") || editText.getText().equals("\n")) {
+            return;
+        }
         //调用日期Dialog
         DatePickerDialog datePickerDialog = new DatePickerDialog(this, new DatePickerDialog.OnDateSetListener() {
             @Override
