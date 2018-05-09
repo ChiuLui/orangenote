@@ -82,6 +82,8 @@ public class NewNote extends AppCompatActivity {
 
     public static TextView textView_toolbar;
 
+    private boolean isSave = false;
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,7 +157,7 @@ public class NewNote extends AppCompatActivity {
      */
     private void saveToDatabast() {
         //如果数据现在的数据和传过来的数据不一样(修改了)而且不为null, 就保存数据.
-        if (!(StringToAscii.stringToAscii(nowContent) == StringToAscii.stringToAscii(editText.getText().toString())) && !((editText.getText()).length() <= 0) || editText.getText().equals("") || editText.getText() == null || editText.getText().equals(" ") || editText.getText().equals("\n")) {
+        if (!(StringToAscii.stringToAscii(nowContent) == StringToAscii.stringToAscii(editText.getText().toString())) && !(((editText.getText()).length() <= 0) || editText.getText().equals("") || editText.getText() == null || editText.getText().equals(" ") || editText.getText().equals("\n")) && !(isSave)) {
             //创建表
             Note note = new Note();
             //如果是旧便签被修改就重新得到现在的时间, 并删除数据库中的旧表
@@ -174,6 +176,9 @@ public class NewNote extends AppCompatActivity {
             note.setContent(editText.getText().toString());
             note.save();
             nowId = note.getId();
+            nowContent = note.getContent();
+            //把保存标志改变
+            isSave = true;
         }
         //如果旧便签修改了变成空便签, 就从数据库删除
         if ((editText.getText()).length() <= 0 || editText.getText().equals("") || editText.getText() == null || editText.getText().equals(" ") || editText.getText().equals("\n")) {
@@ -227,9 +232,6 @@ public class NewNote extends AppCompatActivity {
             //提醒功能
             case R.id.remind_toolbar:
                 if (!isRemind) {
-//                    if (ContextCompat.checkSelfPermission(NewNote.this, Manifest.permission.SYSTEM_ALERT_WINDOW) != PackageManager.PERMISSION_GRANTED){
-//                        ActivityCompat.requestPermissions(NewNote.this, new String[]{Manifest.permission.SYSTEM_ALERT_WINDOW}, 1);
-//                    } else {
                     if(!Settings.canDrawOverlays(this)){
                         //没有悬浮窗权限,跳转申请
                         new AlertDialog.Builder(this)
@@ -262,7 +264,6 @@ public class NewNote extends AppCompatActivity {
                         saveToDatabast();
                         setRemind();
                     }
-//                    }
                 } else {
                     stopRemind(nowId);
                     Toast.makeText(this, "提醒已关闭", Toast.LENGTH_SHORT).show();

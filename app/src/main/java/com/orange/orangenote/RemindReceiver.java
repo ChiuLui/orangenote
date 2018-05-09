@@ -63,7 +63,7 @@ public class RemindReceiver extends BroadcastReceiver {
         nowContent = intent.getStringExtra("nowContent");
         nowState = intent.getBooleanExtra("nowState", true);
 
-        //如果没有悬浮窗权限
+        //-------------------------------------------如果没有悬浮窗权限
         if (!Settings.canDrawOverlays(context)) {
             //发通知
             Intent noteIntent = new Intent(context, NewNote.class);
@@ -91,11 +91,9 @@ public class RemindReceiver extends BroadcastReceiver {
                     .build();
             manager.notify(nowId, notification);
         } else {
-        //如果有悬浮窗权限
+        //-------------------------------------如果有悬浮窗权限
             //点亮屏幕
             wakeUpAndUnlock(context);
-            //播放铃声
-            startAlarm(context);
             //弹出dialog
             final Intent noteIntent1 = new Intent(context, NewNote.class);
             noteIntent1.putExtra("nowId", nowId);
@@ -133,6 +131,9 @@ public class RemindReceiver extends BroadcastReceiver {
             alertDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ERROR);//位于所有内容之上
             alertDialog.getWindow().getAttributes().gravity = Gravity.CENTER;
             alertDialog.show();
+
+            //播放铃声
+            startAlarm(context);
 
         }
 

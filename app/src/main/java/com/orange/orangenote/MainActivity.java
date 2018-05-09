@@ -103,8 +103,7 @@ public class MainActivity extends AppCompatActivity {
         linearLayoutManager = new LinearLayoutManager(MainActivity.this, LinearLayoutManager.VERTICAL, false);
 
         staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
-//        staggeredGridLayoutManager.setStackFromEnd(true);//列表再底部开始展示，反转后由上面开始展示
-//        staggeredGridLayoutManager.setReverseLayout(true);//列表翻转
+
         if (isListView) {
             recyclerView.setLayoutManager(linearLayoutManager);
         } else {
@@ -127,6 +126,8 @@ public class MainActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
             //给按钮设置图片
             actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
+            //设置Applogo
+            actionBar.setLogo(R.mipmap.orange);
         }
 
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
@@ -236,6 +237,7 @@ public class MainActivity extends AppCompatActivity {
                     dialog.setTitle("删除便签");
                     dialog.setMessage("确认要删除所选的 " + deleteNote.size() + " 条便签吗?");
                     dialog.setCancelable(true);
+                    dialog.setCancelable(false);
                     dialog.setPositiveButton("确认", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
