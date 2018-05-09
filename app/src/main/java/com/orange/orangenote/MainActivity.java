@@ -74,8 +74,12 @@ public class MainActivity extends AppCompatActivity {
     StaggeredGridLayoutManager staggeredGridLayoutManager;
 
     public static int isAllCheck = 0;
+
+    /** 是否全选状态_正常未全选 */
     public static final int isAllCheck_NORMAL = 0;
+    /** 是否全选状态_全选中 */
     public static final int isAllCheck_CHECK = 1;
+    /** 是否全选状态_取消全选后 */
     public static final int isAllCheck_UPCHECK = 2;
 
     @Override
@@ -212,16 +216,22 @@ public class MainActivity extends AppCompatActivity {
                 break;
                 //全选
             case R.id.allcheck_toolbar:
+                //每次点击判断是否全选
                 if (deleteNote.size() != noteList.size()){
+                    //不是全选就选择正常状态
                     isAllCheck = isAllCheck_NORMAL;
                 }
+                //是正常状态下点击
                 if (isAllCheck == isAllCheck_NORMAL){
+                    //全选
                     isAllCheck = isAllCheck_CHECK;
                     deleteNote.clear();
                     for (Note note : noteList){
                         deleteNote.add(note);
                     }
+                    //在全选中状态下点击
                 } else if (isAllCheck == isAllCheck_CHECK){
+                    //取消全选
                     isAllCheck = isAllCheck_UPCHECK;
                     deleteNote.clear();
                     isAllCheck = isAllCheck_NORMAL;//把状态重置回正常状态
@@ -236,7 +246,6 @@ public class MainActivity extends AppCompatActivity {
                     AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
                     dialog.setTitle("删除便签");
                     dialog.setMessage("确认要删除所选的 " + deleteNote.size() + " 条便签吗?");
-                    dialog.setCancelable(true);
                     dialog.setCancelable(false);
                     dialog.setPositiveButton("确认", new DialogInterface.OnClickListener() {
                         @Override
@@ -283,6 +292,7 @@ public class MainActivity extends AppCompatActivity {
                     //不满足条件的话, 只退出删除模式, 刷新视图
                     if (isDelete) {
                         isDelete = false;
+                        deleteNote.clear();
                         isAllCheck = isAllCheck_NORMAL;
                         menu.findItem(R.id.delete_toolbar).setVisible(false);
                         menu.findItem(R.id.allcheck_toolbar).setVisible(false);

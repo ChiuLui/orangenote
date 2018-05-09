@@ -128,12 +128,12 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                     //在删除模式下
                     //点击item, 如果当前复选框被选中就显示未选中并且待删除列表中移除对象
                     if (viewHolder.checkBox_item.isChecked()) {
-                        viewHolder.checkBox_item.setChecked(false);
                         MainActivity.deleteNote.remove(note);
+                        viewHolder.checkBox_item.setChecked(false);
                     } else {
                         //如果当前复选框为未选中, 设置选中, 并且添加到待删除列表
-                        viewHolder.checkBox_item.setChecked(true);
                         MainActivity.deleteNote.add(note);
+                        viewHolder.checkBox_item.setChecked(true);
                     }
                 }
             }
@@ -164,9 +164,9 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
             holder.checkBox_item.setVisibility(View.GONE);
         }
         //当待删除的列表为空时, 重置checkBok, 设置所有复选框为false
-        if (MainActivity.deleteNote == null || MainActivity.deleteNote.size() <= 0) {
-            MainActivity.deleteNote.clear();
+        if (MainActivity.deleteNote == null || MainActivity.deleteNote.size() <= 0 ) {
             holder.checkBox_item.setChecked(false);
+            MainActivity.deleteNote.clear();
         }
         //当前是否处于ListView视图, 动态改变内容显示的单行还是多行模式
         if (MainActivity.isListView){

@@ -147,9 +147,6 @@ public class RemindReceiver extends BroadcastReceiver {
         note.setToDefault("hourRemind");
         note.setToDefault("minuteRemind");
         note.save();
-        //隐藏提示文本
-        NewNote.textView_toolbar.setText("");
-        NewNote.textView_toolbar.setVisibility(View.GONE);
     }
 
     /**
