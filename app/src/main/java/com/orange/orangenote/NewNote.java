@@ -1,6 +1,5 @@
 package com.orange.orangenote;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.DatePickerDialog;
@@ -10,14 +9,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -29,9 +27,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -42,9 +42,10 @@ import com.orange.orangenote.util.StringToAscii;
 
 import org.litepal.crud.DataSupport;
 
-import java.security.Permissions;
 import java.util.Calendar;
 import java.util.TimeZone;
+
+import jp.wasabeef.richeditor.RichEditor;
 
 
 public class NewNote extends AppCompatActivity {
@@ -69,6 +70,8 @@ public class NewNote extends AppCompatActivity {
 
     private EditText editText;
 
+    private RichEditor richText;
+
     private SharedPreferences.Editor editor;
 
     private SharedPreferences prefer;
@@ -84,11 +87,21 @@ public class NewNote extends AppCompatActivity {
 
     private boolean isSave = false;
 
+    private ImageButton imgbtn_break, imgbtn_rebreak, imgbtn_image, imgbtn_center, imgbtn_bold, imgbtn_italic, imgbtn_underline, imgbtn_fontsize, imgbtn_checkbox;
+
+    private static int FONTSIZE = 4;
+    private static boolean isFontCenter = false;
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_note);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+        initBottonToolBar();
+
+        initBottonToolBarListener();
 
         calender = Calendar.getInstance();
 
@@ -105,9 +118,17 @@ public class NewNote extends AppCompatActivity {
         collapsingToolbarLayout = findViewById(R.id.collapsingtoolbar_newnote);
         collapsingToolbarLayout.setTitle(nowDate + " " + nowTime);
 
+        richText = findViewById(R.id.richedit_newnote_content);
+        richText.setEditorHeight(440);
+        richText.setEditorFontSize(16);
+        richText.setEditorFontColor(Color.parseColor("#333333"));
+        richText.setPadding(10, 10, 10, 10);
+        richText.setPlaceholder("随便记点什么吧...");
+
         editText = findViewById(R.id.edit_newnote_content);
 
         editText.setText(nowContent);
+        richText.setHtml(nowContent);
 
         textView_toolbar = findViewById(R.id.textview_toolbar_newnote);
 
@@ -150,6 +171,30 @@ public class NewNote extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void initBottonToolBarListener() {
+        imgbtn_image.setOnClickListener(new mClick());
+        imgbtn_center.setOnClickListener(new mClick());
+        imgbtn_bold.setOnClickListener(new mClick());
+        imgbtn_italic.setOnClickListener(new mClick());
+        imgbtn_fontsize.setOnClickListener(new mClick());
+        imgbtn_checkbox.setOnClickListener(new mClick());
+        imgbtn_break.setOnClickListener(new mClick());
+        imgbtn_rebreak.setOnClickListener(new mClick());
+        imgbtn_underline.setOnClickListener(new mClick());
+    }
+
+    private void initBottonToolBar() {
+        imgbtn_image = findViewById(R.id.imgbtn_image);
+        imgbtn_center = findViewById(R.id.imgbtn_center);
+        imgbtn_bold = findViewById(R.id.imgbtn_bold);
+        imgbtn_italic = findViewById(R.id.imgbtn_italic);
+        imgbtn_fontsize = findViewById(R.id.imgbtn_fontsize);
+        imgbtn_checkbox = findViewById(R.id.imgbtn_checkbox);
+        imgbtn_break = findViewById(R.id.imgbtn_break);
+        imgbtn_rebreak = findViewById(R.id.imgbtn_rebreak);
+        imgbtn_underline = findViewById(R.id.imgbtn_underline);
     }
 
     /**
@@ -203,7 +248,7 @@ public class NewNote extends AppCompatActivity {
         menu.findItem(R.id.view_toolbar).setVisible(false);
         menu.findItem(R.id.allcheck_toolbar).setVisible(false);
         menu.findItem(R.id.remind_toolbar).setVisible(true);
-        if (isRemind){
+        if (isRemind) {
             menu.findItem(R.id.remind_toolbar).setIcon(R.drawable.unclock);
             showRemindTime();
         } else {
@@ -232,7 +277,7 @@ public class NewNote extends AppCompatActivity {
             //提醒功能
             case R.id.remind_toolbar:
                 if (!isRemind) {
-                    if(!Settings.canDrawOverlays(this)){
+                    if (!Settings.canDrawOverlays(this)) {
                         //没有悬浮窗权限,跳转申请
                         new AlertDialog.Builder(this)
                                 .setTitle("显示悬浮窗")
@@ -353,7 +398,7 @@ public class NewNote extends AppCompatActivity {
      * @param minute
      */
     private void startRemind(int year, int month, int day, int hour, int minute) {
-        Log.e("TAG", "startRemind()" + "已设置提醒" + mYear + "年" + month + "月" + day + "日" + " " + hour + ":" + minute );
+        Log.e("TAG", "startRemind()" + "已设置提醒" + mYear + "年" + month + "月" + day + "日" + " " + hour + ":" + minute);
         //得到日历实例，主要是为了下面的获取时间
         Calendar mCalendar = Calendar.getInstance();
 //        mCalendar.setTimeInMillis(System.currentTimeMillis());
@@ -406,11 +451,11 @@ public class NewNote extends AppCompatActivity {
          * mCalendar.getTimeInMillis() 上面设置时间的毫秒值
          */
         am.setExact(AlarmManager.RTC_WAKEUP, mCalendar.getTimeInMillis(), pi);
-                //获取上面设置的 时间 的毫秒值
+        //获取上面设置的 时间 的毫秒值
         long selectTime = mCalendar.getTimeInMillis();
 
         // 如果当前时间小于设置的时间，(合法)那么就弹出提示框
-        if(systemTime < selectTime) {
+        if (systemTime < selectTime) {
             String h = hour + "";
             String m = minute + "";
             if (hour < 10) {
@@ -419,7 +464,7 @@ public class NewNote extends AppCompatActivity {
             if (minute < 10) {
                 m = "0" + minute;
             }
-            Toast.makeText(this, "将会在: " + mYear + "年" + ++month  + "月" + day + "日" + " " + h + ":" + m + " 提醒您", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "将会在: " + mYear + "年" + ++month + "月" + day + "日" + " " + h + ":" + m + " 提醒您", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -468,13 +513,13 @@ public class NewNote extends AppCompatActivity {
             minute = "0" + note.getMinuteRemind();
         }
         //同年
-        if (note.getYearRemind() == calendar.get(Calendar.YEAR)){
+        if (note.getYearRemind() == calendar.get(Calendar.YEAR)) {
             //同月
-            if (note.getMonthRemind() == calendar.get(Calendar.MONTH)){
+            if (note.getMonthRemind() == calendar.get(Calendar.MONTH)) {
                 //同日
-                if (note.getDayRemind() == calendar.get(Calendar.DAY_OF_MONTH)){
+                if (note.getDayRemind() == calendar.get(Calendar.DAY_OF_MONTH)) {
                     //同小时
-                    if (note.getHourRemind() == calendar.get(Calendar.HOUR_OF_DAY)){
+                    if (note.getHourRemind() == calendar.get(Calendar.HOUR_OF_DAY)) {
                         //同分钟
                         if (note.getMinuteRemind() <= calendar.get(Calendar.MINUTE)) {
                             Toast.makeText(this, "请选择大于当前的时间", Toast.LENGTH_SHORT).show();
@@ -484,7 +529,7 @@ public class NewNote extends AppCompatActivity {
                             textView_toolbar.setText(note.getMinuteRemind() - calendar.get(Calendar.MINUTE) + "分钟后");
                         }
                     } else {
-                        if (note.getHourRemind() <= calendar.get(Calendar.HOUR_OF_DAY)){
+                        if (note.getHourRemind() <= calendar.get(Calendar.HOUR_OF_DAY)) {
                             Toast.makeText(this, "请选择大于当前的时间", Toast.LENGTH_SHORT).show();
                             stopRemind(nowId);
 //                            textView_toolbar.setText("明天" + note.getHourRemind() + ":" + note.getMinuteRemind());
@@ -493,9 +538,9 @@ public class NewNote extends AppCompatActivity {
                         }
                     }
                 } else {
-                    if (note.getDayRemind() - calendar.get(Calendar.DAY_OF_MONTH) == 1){
+                    if (note.getDayRemind() - calendar.get(Calendar.DAY_OF_MONTH) == 1) {
                         textView_toolbar.setText("明天" + hour + ":" + minute);
-                    } else if (note.getDayRemind() - calendar.get(Calendar.DAY_OF_MONTH) == 2){
+                    } else if (note.getDayRemind() - calendar.get(Calendar.DAY_OF_MONTH) == 2) {
                         textView_toolbar.setText("后天" + hour + ":" + minute);
                     } else {
                         textView_toolbar.setText(note.getMonthRemind() + 1 + "月" + note.getDayRemind() + "日" + hour + ":" + minute);
@@ -531,15 +576,74 @@ public class NewNote extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode){
+        switch (requestCode) {
             case 1:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     saveToDatabast();
                     setRemind();
                 } else {
                     Toast.makeText(this, "必须允许该权限才能使用提醒功能", Toast.LENGTH_SHORT).show();
                 }
                 break;
+        }
+    }
+
+    private class mClick implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                //撤销
+                case R.id.imgbtn_break:
+                    richText.undo();
+                    Log.e("TAG", "onClick: imgbtn_break");
+                    break;
+                //重做
+                case R.id.imgbtn_rebreak:
+                    richText.redo();
+                    Log.e("TAG", "onClick: imgbtn_break");
+                    break;
+                //插入图片
+                case R.id.imgbtn_image:
+                    Log.e("TAG", "onClick: imgbtn_image");
+                    break;
+                //居中
+                case R.id.imgbtn_center:
+                    if (isFontCenter) {
+                        richText.setAlignLeft();
+                        isFontCenter = false;
+                    } else {
+                        richText.setAlignCenter();
+                        isFontCenter = true;
+                    }
+                    break;
+                //粗体
+                case R.id.imgbtn_bold:
+                    richText.setBold();
+                    Log.e("TAG", "!!!!!!!!!!!!!imgbtn_bold");
+                    break;
+                //斜体
+                case R.id.imgbtn_italic:
+                    richText.setItalic();
+                    break;
+                //下划线
+                case R.id.imgbtn_underline:
+                    richText.setUnderline();
+                    break;
+                //字体大小
+                case R.id.imgbtn_fontsize:
+                    if (FONTSIZE < 7) {
+                        richText.setFontSize(FONTSIZE++);
+                    }
+                    if (FONTSIZE == 7) {
+                        FONTSIZE = 3;
+                    }
+                    Log.e("TAG", "!!!!!!!!!!!!!FONTSIZE = " + FONTSIZE);
+                    break;
+                //待办事项
+                case R.id.imgbtn_checkbox:
+                    richText.insertTodo();
+                    break;
+            }
         }
     }
 

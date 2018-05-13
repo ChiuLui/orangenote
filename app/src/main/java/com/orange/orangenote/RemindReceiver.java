@@ -197,7 +197,6 @@ public class RemindReceiver extends BroadcastReceiver {
     //获取系统默认铃声的Uri
     private Uri getSystemDefultRingtoneUri() {
         return RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-
     }
 
 }
