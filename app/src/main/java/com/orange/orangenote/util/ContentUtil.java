@@ -77,4 +77,13 @@ public class ContentUtil {
         }
     }
 
+    public static String getNoHtmlContent(String content){
+        String temp = content;
+        temp = temp.replaceAll("<br>", "\n"); //更换<br>和标签
+        temp = temp.replaceAll("&nbsp;", " "); //更换&nbsp;标签
+        temp = temp.replaceAll("</?[^>]+>", ""); //剔出<html>的标签
+//        temp = temp.replaceAll("<a>\\s*|\t|\r|\n</a>", "");//去除字符串中的空格,回车,换行符,制表符
+        return temp;
+    }
+
 }

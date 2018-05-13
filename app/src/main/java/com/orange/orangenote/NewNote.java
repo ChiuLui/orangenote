@@ -97,7 +97,6 @@ public class NewNote extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_note);
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         initBottonToolBar();
 
@@ -119,33 +118,44 @@ public class NewNote extends AppCompatActivity {
         collapsingToolbarLayout.setTitle(nowDate + " " + nowTime);
 
         richText = findViewById(R.id.richedit_newnote_content);
-        richText.setEditorHeight(440);
+        richText.setEditorHeight(450);
         richText.setEditorFontSize(16);
         richText.setEditorFontColor(Color.parseColor("#333333"));
         richText.setPadding(10, 10, 10, 10);
         richText.setPlaceholder("随便记点什么吧...");
+        richText.setOnTextChangeListener(new RichEditor.OnTextChangeListener() {
+            @Override
+            public void onTextChange(String text) {
+                //内容有改变就显示撤回按钮
+                imgbtn_break.setVisibility(View.VISIBLE);
+                //没有改变就隐藏撤回和重构按钮
+                if (StringToAscii.stringToAscii(nowContent) == StringToAscii.stringToAscii(text)){
+                    imgbtn_break.setVisibility(View.GONE);
+                }
+            }
+        });
 
-        editText = findViewById(R.id.edit_newnote_content);
-
-        editText.setText(nowContent);
+//        editText = findViewById(R.id.edit_newnote_content);
+//
+//        editText.setText(nowContent);
         richText.setHtml(nowContent);
 
         textView_toolbar = findViewById(R.id.textview_toolbar_newnote);
 
-        //如果传进来的标志为旧便签就不显示光标
-        if (nowState) {
-            editText.setCursorVisible(false);
-        }
-
-        //为edittext设置触摸事件
-        editText.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                //一触摸就显示光标
-                editText.setCursorVisible(true);
-                return false;
-            }
-        });
+//        //如果传进来的标志为旧便签就不显示光标
+//        if (nowState) {
+//            editText.setCursorVisible(false);
+//        }
+//
+//        //为edittext设置触摸事件
+//        editText.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                //一触摸就显示光标
+//                editText.setCursorVisible(true);
+//                return false;
+//            }
+//        });
 
         editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
 
@@ -202,7 +212,7 @@ public class NewNote extends AppCompatActivity {
      */
     private void saveToDatabast() {
         //如果数据现在的数据和传过来的数据不一样(修改了)而且不为null, 就保存数据.
-        if (!(StringToAscii.stringToAscii(nowContent) == StringToAscii.stringToAscii(editText.getText().toString())) && !(((editText.getText()).length() <= 0) || editText.getText().equals("") || editText.getText() == null || editText.getText().equals(" ") || editText.getText().equals("\n")) && !(isSave)) {
+        if (!(StringToAscii.stringToAscii(nowContent) == StringToAscii.stringToAscii(richText.getHtml().toString())) && !(((richText.getHtml()).length() <= 0) || richText.getHtml().equals("") || richText.getHtml() == null || richText.getHtml().equals(" ") || richText.getHtml().equals("\n")) && !(isSave)) {
             //创建表
             Note note = new Note();
             //如果是旧便签被修改就重新得到现在的时间, 并删除数据库中的旧表
@@ -218,7 +228,7 @@ public class NewNote extends AppCompatActivity {
                 note.setTime(nowTime);
             }
             //保存内容
-            note.setContent(editText.getText().toString());
+            note.setContent(richText.getHtml().toString());
             note.save();
             nowId = note.getId();
             nowContent = note.getContent();
@@ -226,7 +236,7 @@ public class NewNote extends AppCompatActivity {
             isSave = true;
         }
         //如果旧便签修改了变成空便签, 就从数据库删除
-        if ((editText.getText()).length() <= 0 || editText.getText().equals("") || editText.getText() == null || editText.getText().equals(" ") || editText.getText().equals("\n")) {
+        if ((richText.getHtml()).length() <= 0 || richText.getHtml().equals("") || richText.getHtml() == null || richText.getHtml().equals(" ") || richText.getHtml().equals("\n")) {
             if (isRemind) {
                 stopRemind(nowId);
             }
@@ -317,19 +327,19 @@ public class NewNote extends AppCompatActivity {
             //删除键被点击
             case R.id.delete_toolbar:
                 //把数据保存到SP存储中
-                editor.putString("delete", String.valueOf(editText.getText()));
+                editor.putString("delete", String.valueOf(richText.getHtml()));
                 editor.apply();
                 //退出键盘
                 InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
-                editText.setText("");//置空
-                editText.setCursorVisible(false);//取消光标
+                imm.hideSoftInputFromWindow(richText.getWindowToken(), 0);
+                richText.setHtml("");//置空
+//                editText.setCursorVisible(false);//取消光标
                 //设置Snackbar事件, 增加用户友好
                 Snackbar.make(collapsingToolbarLayout, "已清空文本", Snackbar.LENGTH_LONG).setAction("恢复", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         //可恢复
-                        editText.setText(prefer.getString("delete", null));
+                        richText.setHtml(prefer.getString("delete", null));
                     }
                 }).show();
                 break;
@@ -338,7 +348,7 @@ public class NewNote extends AppCompatActivity {
     }
 
     private void setRemind() {
-        if ((editText.getText()).length() <= 0 || editText.getText().equals("") || editText.getText() == null || editText.getText().equals(" ") || editText.getText().equals("\n")) {
+        if ((richText.getHtml()).length() <= 0 || richText.getHtml().equals("") || richText.getHtml() == null || richText.getHtml().equals(" ") || richText.getHtml().equals("\n")) {
             return;
         }
         //调用日期Dialog
@@ -595,11 +605,13 @@ public class NewNote extends AppCompatActivity {
                 //撤销
                 case R.id.imgbtn_break:
                     richText.undo();
+                    imgbtn_rebreak.setVisibility(View.VISIBLE);
                     Log.e("TAG", "onClick: imgbtn_break");
                     break;
                 //重做
                 case R.id.imgbtn_rebreak:
                     richText.redo();
+                    imgbtn_break.setVisibility(View.VISIBLE);
                     Log.e("TAG", "onClick: imgbtn_break");
                     break;
                 //插入图片

@@ -76,8 +76,8 @@ public class RemindReceiver extends BroadcastReceiver {
             PendingIntent pi = PendingIntent.getActivity(context, 0, noteIntent, 0);
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             Notification notification = new Notification.Builder(context)
-                    .setContentTitle(ContentUtil.getTitle(nowContent))//标题
-                    .setContentText(ContentUtil.getContent(nowContent))//内容
+                    .setContentTitle(ContentUtil.getTitle(ContentUtil.getNoHtmlContent(nowContent)))//标题
+                    .setContentText(ContentUtil.getContent(ContentUtil.getNoHtmlContent(nowContent)))//内容
                     .setWhen(System.currentTimeMillis())//显示时间
                     .setSmallIcon(R.mipmap.ic_launcher)//小图片
                     .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher))//大图片
@@ -106,7 +106,7 @@ public class RemindReceiver extends BroadcastReceiver {
             builder = new AlertDialog.Builder(context);
             builder.setTitle("橙子便签提醒");
             builder.setIcon(R.mipmap.orangenote_circle);
-            builder.setMessage(ContentUtil.getDialogContent(nowContent));
+            builder.setMessage(ContentUtil.getDialogContent(ContentUtil.getNoHtmlContent(nowContent)));
             builder.setCancelable(false);
             builder.setPositiveButton("查看", new DialogInterface.OnClickListener() {
                 @Override

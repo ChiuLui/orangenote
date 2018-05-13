@@ -60,43 +60,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:paddingBottom="45dp"
             android:orientation="vertical">
-
-            <android.support.v7.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginBottom="10dp"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:layout_marginTop="35dp"
-                app:cardCornerRadius="4dp">
-
-                <android.support.design.widget.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:paddingLeft="5dp"
-                    android:paddingRight="5dp"
-                    android:paddingTop="5dp"
-                    app:counterEnabled="true"
-                    app:hintAnimationEnabled="false"
-                    app:hintEnabled="false">
-
-                    <EditText
-                        android:id="@+id/edit_newnote_content"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="#FFFFFF"
-                        android:gravity="top"
-                        android:hint="随便记点什么吧"
-                        android:lineSpacingExtra="5dp"
-                        android:minHeight="440dp"
-                        android:textColor="#333333"
-                        android:textSize="16sp"
-                        android:textStyle="normal" />
-
-                </android.support.design.widget.TextInputLayout>
-
-            </android.support.v7.widget.CardView>
 
             <android.support.v7.widget.CardView
                 android:layout_width="match_parent"

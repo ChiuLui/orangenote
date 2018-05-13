@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.orange.orangenote.db.Note;
@@ -145,7 +144,8 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Note note = mNoteList.get(position);
-        String temp = note.getContent();
+        String temp = note.getContent();//得到内容
+        temp = ContentUtil.getNoHtmlContent(temp);
         holder.textView_title.setText(ContentUtil.getTitle(temp));
         holder.textView_content.setText(ContentUtil.getContent(temp));
         //当前内容长度是否为空内容, 隐藏或显示, 并且添加内边距补足高度

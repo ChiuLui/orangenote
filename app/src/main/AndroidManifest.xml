@@ -23,7 +23,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".NewNote"/>
+        <activity android:name=".NewNote"
+            android:windowSoftInputMode="adjustResize"/>
 
         <receiver
             android:name=".RemindReceiver"

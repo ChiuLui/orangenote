@@ -16,6 +16,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginLeft="10dp"
+                android:visibility="gone"
                 android:background="@null"
                 android:contentDescription="@null"
                 android:src="@drawable/text_break" />
@@ -25,6 +26,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginLeft="10dp"
+                android:visibility="gone"
                 android:background="@null"
                 android:contentDescription="@null"
                 android:src="@drawable/text_rebreak" />
