@@ -1,5 +1,6 @@
 package com.orange.orangenote;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.DatePickerDialog;
@@ -8,8 +9,11 @@ import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -25,9 +29,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -39,13 +41,23 @@ import android.widget.Toast;
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.util.DateUtil;
 import com.orange.orangenote.util.StringToAscii;
+import com.zhihu.matisse.Matisse;
+import com.zhihu.matisse.MimeType;
+import com.zhihu.matisse.engine.impl.GlideEngine;
+import com.zhihu.matisse.internal.entity.CaptureStrategy;
 
 import org.litepal.crud.DataSupport;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.TimeZone;
 
 import jp.wasabeef.richeditor.RichEditor;
+
+
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 
 
 public class NewNote extends AppCompatActivity {
@@ -91,6 +103,9 @@ public class NewNote extends AppCompatActivity {
 
     private static int FONTSIZE = 4;
     private static boolean isFontCenter = false;
+    private static final int REQUEST_CODE_CHOOSE = 1;//定义请求码常量
+
+    List<Uri> mSelected;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -129,7 +144,7 @@ public class NewNote extends AppCompatActivity {
                 //内容有改变就显示撤回按钮
                 imgbtn_break.setVisibility(View.VISIBLE);
                 //没有改变就隐藏撤回和重构按钮
-                if (StringToAscii.stringToAscii(nowContent) == StringToAscii.stringToAscii(text)){
+                if (StringToAscii.stringToAscii(nowContent) == StringToAscii.stringToAscii(text)) {
                     imgbtn_break.setVisibility(View.GONE);
                 }
             }
@@ -595,6 +610,17 @@ public class NewNote extends AppCompatActivity {
                     Toast.makeText(this, "必须允许该权限才能使用提醒功能", Toast.LENGTH_SHORT).show();
                 }
                 break;
+            case 2:
+                if (grantResults.length > 0) {
+                    for (int result : grantResults) {
+                        if (result != PackageManager.PERMISSION_GRANTED) {
+                            Toast.makeText(this, "必须同意读写权限才能使用插入图片功能", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                    }
+                    showMatisse();
+                }
+                break;
         }
     }
 
@@ -617,6 +643,26 @@ public class NewNote extends AppCompatActivity {
                 //插入图片
                 case R.id.imgbtn_image:
                     Log.e("TAG", "onClick: imgbtn_image");
+                    if (Build.VERSION.SDK_INT >= 23) {
+                        List<String> permissionList = new ArrayList<>();
+                        if (ContextCompat.checkSelfPermission(NewNote.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                        }
+                        if (ContextCompat.checkSelfPermission(NewNote.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                            permissionList.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+                        }
+                        if (ContextCompat.checkSelfPermission(NewNote.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                            permissionList.add(Manifest.permission.CAMERA);
+                        }
+                        if (!permissionList.isEmpty()) {
+                            String[] permissions = permissionList.toArray(new String[permissionList.size()]);
+                            ActivityCompat.requestPermissions(NewNote.this, permissions, 2);
+                        } else {
+                            showMatisse();
+                        }
+                    } else {
+                        showMatisse();
+                    }
                     break;
                 //居中
                 case R.id.imgbtn_center:
@@ -658,5 +704,34 @@ public class NewNote extends AppCompatActivity {
             }
         }
     }
+
+
+    private void showMatisse() {
+        Matisse
+                .from(NewNote.this)
+                .choose(MimeType.allOf())//照片视频全部显示
+                .capture(true) //是否提供拍照功能
+                .captureStrategy(new CaptureStrategy(true, "com.orange.orangenote.fileprovider"))//存储到哪里
+                .countable(true)//有序选择图片
+                .maxSelectable(1)//最大选择数量为1
+                .gridExpectedSize(getResources().getDimensionPixelSize(R.dimen.grid_expected_size))//图片显示表格的大小
+                .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)//图像选择和预览活动所需的方向。
+                .thumbnailScale(0.85f)//缩放比例
+                .theme(R.style.Matisse_Zhihu)//主题  暗色主题 R.style.Matisse_Dracula
+                .imageEngine(new GlideEngine())//加载方式
+                .forResult(REQUEST_CODE_CHOOSE);//请求码
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_CHOOSE && resultCode == RESULT_OK) {
+            mSelected = Matisse.obtainResult(data);
+            for (Uri uri : mSelected) {
+                richText.insertImage(uri.toString(), "image_1");
+            }
+        }
+    }
+
 
 }
