@@ -11,10 +11,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -25,6 +28,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -38,9 +42,11 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.util.DateUtil;
 import com.orange.orangenote.util.StringToAscii;
+import com.orange.orangenote.util.UriToPath;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
 import com.zhihu.matisse.engine.impl.GlideEngine;
@@ -48,11 +54,15 @@ import com.zhihu.matisse.internal.entity.CaptureStrategy;
 
 import org.litepal.crud.DataSupport;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
 
+import id.zelory.compressor.Compressor;
 import jp.wasabeef.richeditor.RichEditor;
 
 
@@ -643,7 +653,7 @@ public class NewNote extends AppCompatActivity {
                 //插入图片
                 case R.id.imgbtn_image:
                     Log.e("TAG", "onClick: imgbtn_image");
-                    if (Build.VERSION.SDK_INT >= 23) {
+                    if (Build.VERSION.SDK_INT >= 24) {
                         List<String> permissionList = new ArrayList<>();
                         if (ContextCompat.checkSelfPermission(NewNote.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                             permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
@@ -705,7 +715,9 @@ public class NewNote extends AppCompatActivity {
         }
     }
 
-
+    /**
+     * 图片选择
+     */
     private void showMatisse() {
         Matisse
                 .from(NewNote.this)
@@ -728,9 +740,37 @@ public class NewNote extends AppCompatActivity {
         if (requestCode == REQUEST_CODE_CHOOSE && resultCode == RESULT_OK) {
             mSelected = Matisse.obtainResult(data);
             for (Uri uri : mSelected) {
+                Log.e("TAG", "------------------------得到选择对象" + "  uri: " + uri.toString());
+                imageCompression(uri);
                 richText.insertImage(uri.toString(), "image_1");
             }
         }
+    }
+
+    /**
+     * 压缩图片
+     * @param uri
+     */
+    private void imageCompression(Uri uri) {
+        Log.e("TAG", "--------------------进入方法成功");
+        File file = new File(UriToPath.getRealFilePath(this, uri));
+        File compressedImageFile = null;
+        try {
+            compressedImageFile = new Compressor(this)
+                    .setMaxWidth(640)
+                    .setMaxHeight(480)
+                    .setQuality(75)
+                    .setCompressFormat(Bitmap.CompressFormat.JPEG)
+                    .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_PICTURES).getAbsolutePath())
+                    .compressToFile(file);
+            Toast.makeText(this, "压缩成功", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+//        richText.insertImage();
+
     }
 
 
