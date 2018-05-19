@@ -742,35 +742,41 @@ public class NewNote extends AppCompatActivity {
             for (Uri uri : mSelected) {
                 Log.e("TAG", "------------------------得到选择对象" + "  uri: " + uri.toString());
                 imageCompression(uri);
-                richText.insertImage(uri.toString(), "image_1");
+//                richText.insertImage(uri.toString(), "image_1");
             }
         }
     }
 
     /**
      * 压缩图片
+     *
      * @param uri
      */
     private void imageCompression(Uri uri) {
         Log.e("TAG", "--------------------进入方法成功");
-        File file = new File(UriToPath.getRealFilePath(this, uri));
-        File compressedImageFile = null;
-        try {
-            compressedImageFile = new Compressor(this)
-                    .setMaxWidth(640)
-                    .setMaxHeight(480)
-                    .setQuality(75)
-                    .setCompressFormat(Bitmap.CompressFormat.JPEG)
-                    .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
-                            Environment.DIRECTORY_PICTURES).getAbsolutePath())
-                    .compressToFile(file);
-            Toast.makeText(this, "压缩成功", Toast.LENGTH_SHORT).show();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (uri.toString().indexOf("content://media/") != -1) {
+            //uri路径为相相册时
+            File file = new File(UriToPath.getRealFilePath(this, uri));
+            File compressedImageFile = null;
+            try {
+                compressedImageFile = new Compressor(this)
+                        .setMaxWidth(240)
+                        .setMaxHeight(200)
+                        .setQuality(80)
+                        .setCompressFormat(Bitmap.CompressFormat.JPEG)
+                        .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
+                                Environment.DIRECTORY_PICTURES).getAbsolutePath())
+                        .compressToFile(file);
+                Toast.makeText(this, "压缩成功", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            richText.insertImage(compressedImageFile.toString(), "image_1");
+            Log.e("TAG", "------------------------最终设置的选择对象" + "  uri: " + compressedImageFile.toString());
+        } else {
+            //uri路径为相机时
+            richText.insertImage(uri.toString(), "image_1");
         }
-
-//        richText.insertImage();
-
     }
 
 
