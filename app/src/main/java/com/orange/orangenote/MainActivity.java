@@ -30,6 +30,7 @@ import com.orange.orangenote.util.DateUtil;
 
 import org.litepal.crud.DataSupport;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -261,6 +262,16 @@ public class MainActivity extends AppCompatActivity {
                             }
                             //遍历待删除列表
                             for (Note note : deleteNote) {
+                                //如果添加了图片
+                                if (note.getImageList() != null || note.getImageList().size() > 0){
+                                    for (int i = 0; i < note.getImageList().size(); i++){
+                                        if ((note.getImageList().get(i)).indexOf("-C-") != -1) {
+                                            String path = note.getImageList().get(i).replace("-C-", "");
+                                            File file = new File(path);
+                                            file.delete();
+                                        }
+                                    }
+                                }
                                 //如果设置了提醒功能
                                 if (note.getRemind()) {
                                     //取消提醒

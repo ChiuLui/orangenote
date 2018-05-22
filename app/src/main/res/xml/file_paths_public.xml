@@ -1,21 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <!--&lt;!&ndash;代表外部存储区域的根目录下的文件 Environment.getExternalStorageDirectory()/DCIM/camerademo目录&ndash;&gt;-->
-    <!--<external-path name="mq_DCIM" path="DCIM/camerademo" />-->
+<!--<paths xmlns:android="http://schemas.android.com/apk/res/android">-->
+    <!--&lt;!&ndash;&lt;!&ndash;代表外部存储区域的根目录下的文件 Environment.getExternalStorageDirectory()/DCIM/camerademo目录&ndash;&gt;&ndash;&gt;-->
+    <!--&lt;!&ndash;<external-path name="mq_DCIM" path="DCIM/camerademo" />&ndash;&gt;-->
 
-    <!--&lt;!&ndash;代表外部存储区域的根目录下的文件 Environment.getExternalStorageDirectory()/Pictures/camerademo目录&ndash;&gt;-->
-    <!--<external-path name="mq_Pictures" path="Pictures/camerademo" />-->
+    <!--&lt;!&ndash;&lt;!&ndash;代表外部存储区域的根目录下的文件 Environment.getExternalStorageDirectory()/Pictures/camerademo目录&ndash;&gt;&ndash;&gt;-->
+    <!--&lt;!&ndash;<external-path name="mq_Pictures" path="Pictures/camerademo" />&ndash;&gt;-->
 
-    <!--&lt;!&ndash;代表app 私有的存储区域 Context.getFilesDir()目录下的images目录 /data/user/0/com.hm.camerademo/files/images&ndash;&gt;-->
-    <!--<files-path name="mq_private_files" path="images" />-->
+    <!--&lt;!&ndash;&lt;!&ndash;代表app 私有的存储区域 Context.getFilesDir()目录下的images目录 /data/user/0/com.hm.camerademo/files/images&ndash;&gt;&ndash;&gt;-->
+    <!--&lt;!&ndash;<files-path name="mq_private_files" path="images" />&ndash;&gt;-->
 
-    <!--&lt;!&ndash;代表app 私有的存储区域 Context.getCacheDir()目录下的images目录 /data/user/0/com.hm.camerademo/cache/images&ndash;&gt;-->
-    <!--<cache-path name="mq_private_cache" path="images" />-->
+    <!--&lt;!&ndash;&lt;!&ndash;代表app 私有的存储区域 Context.getCacheDir()目录下的images目录 /data/user/0/com.hm.camerademo/cache/images&ndash;&gt;&ndash;&gt;-->
+    <!--&lt;!&ndash;<cache-path name="mq_private_cache" path="images" />&ndash;&gt;-->
 
-    <!--&lt;!&ndash;代表app 外部存储区域根目录下的文件 Context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)目录下的Pictures目录&ndash;&gt;-->
-    <!--<external-files-path name="mq_external_files" path="Pictures" />-->
-    <!--&lt;!&ndash;代表app 外部存储区域根目录下的文件 Context.getExternalCacheDir目录下的images目录&ndash;&gt;-->
-    <!--<external-cache-path name="mq_external_cache" path="" />-->
-    <!-- 储存在根目录 -->
-    <root-path name="mq_external_cache" path="" />
+    <!--&lt;!&ndash;&lt;!&ndash;代表app 外部存储区域根目录下的文件 Context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)目录下的Pictures目录&ndash;&gt;&ndash;&gt;-->
+    <!--&lt;!&ndash;<external-files-path name="mq_external_files" path="Pictures" />&ndash;&gt;-->
+    <!--&lt;!&ndash;&lt;!&ndash;代表app 外部存储区域根目录下的文件 Context.getExternalCacheDir目录下的images目录&ndash;&gt;&ndash;&gt;-->
+    <!--&lt;!&ndash;<external-cache-path name="mq_external_cache" path="" />&ndash;&gt;-->
+    <!--&lt;!&ndash; 储存在根目录 &ndash;&gt;-->
+    <!--<root-path name="orangenote" path="" />-->
+    <!---->
+<!--</paths>-->
+
+<paths>
+<!--内置SD卡 Environment.getExternalStorageDirectory() .表示共享所有的目录，也可以指定共享的目录-->
+<external-path
+    name="orangenote"
+    path="."/>
+<!--内置SD卡 Context.getExternalCacheDir() .表示共享所有的目录，也可以指定共享的目录-->
+<external-cache-path
+    name="orangenote"
+    path="."/>
+<!--内置SD卡 Context.getExternalFilesDir(null) .表示共享所有的目录，也可以指定共享的目录-->
+<external-files-path
+    name="orangenote"
+    path="."/>
+<!--data目录下 Context.getFilesDir() .表示共享所有的目录，也可以指定共享的目录-->
+<files-path
+    name="orangenote"
+    path="."/>
+<!--data缓存目录 Context.getCacheDir() .表示共享所有的目录，也可以指定共享的目录-->
+<cache-path
+    name="orangenote"
+    path="."/>
+<!--这个标签Android官方文档中是没有提及，Android设备的根目录，该目录下包含着手机内部存储器，外置SD卡等所有文件的目录-->
+<root-path
+    name="orangenote"
+    path="."/>
 </paths>

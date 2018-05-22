@@ -2,7 +2,10 @@ package com.orange.orangenote.db;
 
 import org.litepal.crud.DataSupport;
 
+import java.util.List;
+
 /**
+ * 便签类数据库
  * @author 神经大条蕾弟
  * @version 1.0
  * @date 2018/04/21 16:16
@@ -32,6 +35,26 @@ public class Note extends DataSupport {
     private int hourRemind;
 
     private int minuteRemind;
+
+    private Boolean isImages;
+
+    private List<String> imageList;
+
+    public Boolean getImages() {
+        return isImages;
+    }
+
+    public void setImages(Boolean images) {
+        isImages = images;
+    }
+
+    public List<String> getImageList() {
+        return imageList;
+    }
+
+    public void setImageList(List<String> imageList) {
+        this.imageList = imageList;
+    }
 
     public int getYearRemind() {
         return yearRemind;

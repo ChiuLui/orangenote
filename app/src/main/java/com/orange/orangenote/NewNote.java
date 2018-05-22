@@ -17,7 +17,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -28,7 +27,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -42,7 +40,6 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.util.DateUtil;
 import com.orange.orangenote.util.StringToAscii;
@@ -56,7 +53,6 @@ import org.litepal.crud.DataSupport;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -254,6 +250,8 @@ public class NewNote extends AppCompatActivity {
             }
             //保存内容
             note.setContent(richText.getHtml().toString());
+            List<String> list = new ArrayList<>();
+            note.setImageList(list);
             note.save();
             nowId = note.getId();
             nowContent = note.getContent();
@@ -742,7 +740,6 @@ public class NewNote extends AppCompatActivity {
             for (Uri uri : mSelected) {
                 Log.e("TAG", "------------------------得到选择对象" + "  uri: " + uri.toString());
                 imageCompression(uri);
-//                richText.insertImage(uri.toString(), "image_1");
             }
         }
     }
@@ -753,6 +750,7 @@ public class NewNote extends AppCompatActivity {
      * @param uri
      */
     private void imageCompression(Uri uri) {
+        String saveUri = null;
         Log.e("TAG", "--------------------进入方法成功");
         if (uri.toString().indexOf("content://media/") != -1) {
             //uri路径为相相册时
@@ -772,11 +770,36 @@ public class NewNote extends AppCompatActivity {
                 e.printStackTrace();
             }
             richText.insertImage(compressedImageFile.toString(), "image_1");
+            saveUri = compressedImageFile.toString();
             Log.e("TAG", "------------------------最终设置的选择对象" + "  uri: " + compressedImageFile.toString());
         } else {
             //uri路径为相机时
-            richText.insertImage(uri.toString(), "image_1");
+            Log.e("TAG", "-----------------------uri路径为相机时,转换后的uri : " + UriToPath.getCameraUriToPath(uri));
+            File file = new File(UriToPath.getCameraUriToPath(uri));
+            File compressedImageFile = null;
+            try {
+                compressedImageFile = new Compressor(this)
+                        .setMaxWidth(240)
+                        .setMaxHeight(200)
+                        .setQuality(100)
+                        .setCompressFormat(Bitmap.CompressFormat.JPEG)
+                        .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
+                                Environment.DIRECTORY_PICTURES).getAbsolutePath())
+                        .compressToFile(file);
+                Toast.makeText(this, "压缩成功", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Log.e("TAG", "------------------------最终设置的选择对象" + "  uri: " + compressedImageFile.toString());
+            richText.insertImage(compressedImageFile.toString(), "image_1");
+            file.delete();
+            saveUri = "-C-" + compressedImageFile.toString();
         }
+        saveToDatabast();
+        //在数据库添加图片uri
+        Note note = DataSupport.find(Note.class, nowId);
+        note.getImageList().add(saveUri);
+        note.save();
     }
 
 

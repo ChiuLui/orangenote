@@ -24,6 +24,14 @@ import java.io.File;
 
 public class UriToPath {
 
+    public static String getCameraUriToPath(Uri uri){
+        String path = uri.toString();
+        if (uri.toString().indexOf("content://com.orange.orangenote.fileprovider/orangenote") != -1){
+            path = path.replace("content://com.orange.orangenote.fileprovider/orangenote", "");
+        }
+        return path;
+    }
+
     public static String getRealFilePath(Context context, final Uri uri) {
         if (null == uri)
             return null;
