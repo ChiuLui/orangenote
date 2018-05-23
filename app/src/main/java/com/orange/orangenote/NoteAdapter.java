@@ -9,10 +9,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.orange.orangenote.db.Note;
+import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.util.ContentUtil;
 import com.orange.orangenote.util.dp2px;
 
@@ -56,6 +59,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         TextView textView_content;
         TextView textView_itme;
         CheckBox checkBox_item;
+        ImageView imageView_item;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -65,6 +69,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
             textView_content = itemView.findViewById(R.id.text_item_content);
             textView_itme = itemView.findViewById(R.id.text_item_tiem);
             checkBox_item = itemView.findViewById(R.id.checkbox_item);
+            imageView_item = itemView.findViewById(R.id.imageview_item);
         }
     }
 
@@ -181,6 +186,26 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
             holder.checkBox_item.setChecked(true);
         } else if (MainActivity.isAllCheck == MainActivity.isAllCheck_UPCHECK) {
             holder.checkBox_item.setChecked(false);
+        }
+        //判断如果内容包含图片,则显示图片设置图片
+        if (note.getContent().indexOf("<img src=") != -1){
+            List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);//.order("id desc")
+            if (!(noteImagePaths.isEmpty())){
+                String path = noteImagePaths.get(0).getImagePath();
+                Glide.with(mContext)
+                        .load(path)
+                        .fitCenter()
+                        .crossFade()  //淡入淡出，也是默认动画
+                        .crossFade(1) //定义淡入淡出的时间间隔
+                        .into(holder.imageView_item);
+//                centerInside()
+//                center()
+//                centerCrop() //缩放图片让图片充满整个ImageView的边框，然后裁掉超出的部分。
+//                fitCenter()  // ImageView会被完全填充满，但是图片可能不能完全显示出。
+                holder.imageView_item.setVisibility(View.VISIBLE);
+            }
+        } else {
+            holder.imageView_item.setVisibility(View.GONE);
         }
     }
 

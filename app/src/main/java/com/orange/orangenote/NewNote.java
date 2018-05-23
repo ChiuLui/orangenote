@@ -805,6 +805,7 @@ public class NewNote extends AppCompatActivity {
         noteImagePath.setNoteId(nowId);
         noteImagePath.setImagePath(saveUri);
         noteImagePath.save();
+        Log.e("TAG", "richtext内容 = " + richText.getHtml().toString());
     }
 
 
