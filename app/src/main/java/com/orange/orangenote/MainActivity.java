@@ -24,8 +24,10 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.orange.orangenote.db.Note;
+import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.util.DateUtil;
 
 import org.litepal.crud.DataSupport;
@@ -262,16 +264,20 @@ public class MainActivity extends AppCompatActivity {
                             }
                             //遍历待删除列表
                             for (Note note : deleteNote) {
-                                //如果添加了图片
-                                if (note.getImageList() != null || note.getImageList().size() > 0){
-                                    for (int i = 0; i < note.getImageList().size(); i++){
-                                        if ((note.getImageList().get(i)).indexOf("-C-") != -1) {
-                                            String path = note.getImageList().get(i).replace("-C-", "");
-                                            File file = new File(path);
-                                            file.delete();
-                                        }
+                                //如果插入了图片
+                                List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);
+                                if (!(noteImagePaths.isEmpty())) {
+                                    Toast.makeText(MainActivity.this, "如果返回图片list不为空: ", Toast.LENGTH_SHORT).show();
+                                    //循环删除当前NoteId下的图片文件
+                                    for (NoteImagePath path : noteImagePaths) {
+                                        Toast.makeText(MainActivity.this, "删除图片: " + path.getImagePath(), Toast.LENGTH_SHORT).show();
+                                        File file = new File(path.getImagePath());
+                                        file.delete();
                                     }
                                 }
+                                //删除当前NoteId图片地址的数据库数据
+                                DataSupport.deleteAll(NoteImagePath.class, "noteId = ?" , note.getId()+"");
+
                                 //如果设置了提醒功能
                                 if (note.getRemind()) {
                                     //取消提醒

@@ -41,6 +41,7 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.orange.orangenote.db.Note;
+import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.util.DateUtil;
 import com.orange.orangenote.util.StringToAscii;
 import com.orange.orangenote.util.UriToPath;
@@ -233,9 +234,14 @@ public class NewNote extends AppCompatActivity {
      */
     private void saveToDatabast() {
         //如果数据现在的数据和传过来的数据不一样(修改了)而且不为null, 就保存数据.
-        if (!(StringToAscii.stringToAscii(nowContent) == StringToAscii.stringToAscii(richText.getHtml().toString())) && !(((richText.getHtml()).length() <= 0) || richText.getHtml().equals("") || richText.getHtml() == null || richText.getHtml().equals(" ") || richText.getHtml().equals("\n")) && !(isSave)) {
-            //创建表
-            Note note = new Note();
+        if ( ((StringToAscii.stringToAscii(nowContent)) != (StringToAscii.stringToAscii(richText.getHtml()+""))) && ( ((richText.getHtml()).length() > 0) || !(richText.getHtml().equals("")) || (richText.getHtml() != null) || !(richText.getHtml().equals(" ")) || !(richText.getHtml().equals("\n")) ) ) {
+            Note note = null;
+            if (isSave){
+                note = DataSupport.find(Note.class, nowId);
+            } else {
+                //创建表
+                note = new Note();
+            }
             //如果是旧便签被修改就重新得到现在的时间, 并删除数据库中的旧表
             if (nowState) {
                 note.setYear(DateUtil.getNowYear());
@@ -250,8 +256,6 @@ public class NewNote extends AppCompatActivity {
             }
             //保存内容
             note.setContent(richText.getHtml().toString());
-            List<String> list = new ArrayList<>();
-            note.setImageList(list);
             note.save();
             nowId = note.getId();
             nowContent = note.getContent();
@@ -771,10 +775,10 @@ public class NewNote extends AppCompatActivity {
             }
             richText.insertImage(compressedImageFile.toString(), "image_1");
             saveUri = compressedImageFile.toString();
-            Log.e("TAG", "------------------------最终设置的选择对象" + "  uri: " + compressedImageFile.toString());
+            Log.e("TAG", "------------------------最终设置的选择对象" + " uri: " + compressedImageFile.toString());
         } else {
             //uri路径为相机时
-            Log.e("TAG", "-----------------------uri路径为相机时,转换后的uri : " + UriToPath.getCameraUriToPath(uri));
+            Log.e("TAG", "-----------------------uri路径为相机时,转换后的 uri : " + UriToPath.getCameraUriToPath(uri));
             File file = new File(UriToPath.getCameraUriToPath(uri));
             File compressedImageFile = null;
             try {
@@ -793,13 +797,14 @@ public class NewNote extends AppCompatActivity {
             Log.e("TAG", "------------------------最终设置的选择对象" + "  uri: " + compressedImageFile.toString());
             richText.insertImage(compressedImageFile.toString(), "image_1");
             file.delete();
-            saveUri = "-C-" + compressedImageFile.toString();
+            saveUri = compressedImageFile.toString();
         }
         saveToDatabast();
         //在数据库添加图片uri
-        Note note = DataSupport.find(Note.class, nowId);
-        note.getImageList().add(saveUri);
-        note.save();
+        NoteImagePath noteImagePath = new NoteImagePath();
+        noteImagePath.setNoteId(nowId);
+        noteImagePath.setImagePath(saveUri);
+        noteImagePath.save();
     }
 
 
