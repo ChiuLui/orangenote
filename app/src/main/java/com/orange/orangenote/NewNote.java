@@ -83,7 +83,9 @@ public class NewNote extends AppCompatActivity {
 
     private int nowId;
 
-    /** 是否为旧标签 true: 旧标签 false: 新便签 */
+    /**
+     * 是否为旧标签 true: 旧标签 false: 新便签
+     */
     private boolean nowState;
 
     private Toolbar toolbar;
@@ -110,6 +112,16 @@ public class NewNote extends AppCompatActivity {
     private static int FONTSIZE = 4;
     private static boolean isFontCenter = false;
     private static final int REQUEST_CODE_CHOOSE = 1;//定义请求码常量
+
+    /**
+     * 需要保存的图片uri地址
+     */
+    private String saveUri = null;
+
+    /**
+     * 文本框的实时内容
+     */
+    private static String richTextContent = null;
 
     List<Uri> mSelected;
 
@@ -160,6 +172,20 @@ public class NewNote extends AppCompatActivity {
 //
 //        editText.setText(nowContent);
         richText.setHtml(nowContent);
+        richText.setOnTextChangeListener(new RichEditor.OnTextChangeListener() {
+            @Override
+            public void onTextChange(String text) {
+                richTextContent = text;
+                saveToDatabast();
+                if (!(saveUri.equals(""))) {
+                    saveNoteImagePath(nowId, saveUri);
+                }
+                Log.e("TAG", "richtext内容 = " + richText.getHtml().toString());
+                Log.e("TAG", "onTextChange: richTextContent =" + richTextContent);
+                Log.e("TAG", "onTextChange: text =" + text);
+                Log.e("TAG", "onTextChange: richText.getHtml =" + richText.getHtml());
+            }
+        });
 
         textView_toolbar = findViewById(R.id.textview_toolbar_newnote);
 
@@ -204,6 +230,19 @@ public class NewNote extends AppCompatActivity {
 
     }
 
+    /**
+     * 保存插入的图片uri地址
+     * @param nowId
+     * @param path
+     */
+    private void saveNoteImagePath(int nowId, String path) {
+        NoteImagePath noteImagePath = new NoteImagePath();
+        noteImagePath.setNoteId(nowId);
+        noteImagePath.setImagePath(path);
+        noteImagePath.save();
+        saveUri = "";
+    }
+
     private void initBottonToolBarListener() {
         imgbtn_image.setOnClickListener(new mClick());
         imgbtn_center.setOnClickListener(new mClick());
@@ -233,16 +272,24 @@ public class NewNote extends AppCompatActivity {
      */
     private void saveToDatabast() {
         //如果数据现在的数据和传过来的数据不一样(修改了)而且不为null, 就保存数据.
-        if ( ((StringToAscii.stringToAscii(nowContent)) != (StringToAscii.stringToAscii(richText.getHtml())))
-                &&  ((richText.getHtml()).length() > 0)
+        int i = StringToAscii.stringToAscii(nowContent);
+        int j = StringToAscii.stringToAscii(richText.getHtml());
+        boolean result = (i != j);
+        Log.e("TAG", "!!!!!!!!!!!!!!!!!!!!!!!!nowContent=" + nowContent);
+        Log.e("TAG", "!!!!!!!!!!!!!!!!!!!!!!!!richText.getHtml()=" + richText.getHtml());
+        Log.e("TAG", "!!!!!!!!!!!!!!!!!!!!!!!!(StringToAscii.stringToAscii(nowContent))=" + i);
+        Log.e("TAG", "!!!!!!!!!!!!!!!!!!!!!!!!(StringToAscii.stringToAscii(richText.getHtml()))=" + j);
+        Log.e("TAG", "!!!!!!!!!!!!!!!!!!!!!!!!((StringToAscii.stringToAscii(nowContent)) != (StringToAscii.stringToAscii(richText.getHtml())))=" + result);
+        if (((StringToAscii.stringToAscii(nowContent)) != (StringToAscii.stringToAscii(richText.getHtml())))
+                && ((richText.getHtml()).length() > 0)
                 && !(richText.getHtml().equals(""))
                 && (richText.getHtml() != null)
                 && !(richText.getHtml().equals(" "))
                 && !(richText.getHtml().equals("\n"))
                 && !(richText.getHtml().equals("<br><br>"))
-                && !(richText.getHtml().equals("&nbsp;")) ) {
+                && !(richText.getHtml().equals("&nbsp;"))) {
             Note note = null;
-            if (isSave || nowState){//如果是旧便签或保存过就得到旧对象
+            if (isSave || nowState) {//如果是旧便签或保存过就得到旧对象
                 note = DataSupport.find(Note.class, nowId);
             } else {
                 //创建表
@@ -277,9 +324,8 @@ public class NewNote extends AppCompatActivity {
             }
             DataSupport.deleteAll(Note.class, "id = ?", nowId + "");
         }
-        Log.e("TAG", "当前时间毫秒值 = "+ DateUtil.getTimeStamp());
+        Log.e("TAG", "当前时间毫秒值 = " + DateUtil.getTimeStamp());
     }
-
 
     public boolean onCreateOptionsMenu(Menu menu) {
         this.menu = menu;
@@ -384,7 +430,7 @@ public class NewNote extends AppCompatActivity {
     }
 
     private void setRemind() {
-        if ((richText.getHtml()).length() <= 0 || richText.getHtml().equals("") || richText.getHtml() == null || richText.getHtml().equals(" ") || richText.getHtml().equals("\n") || (richText.getHtml().equals("<br><br>")) || (richText.getHtml().equals("&nbsp;")) ) {
+        if ((richText.getHtml()).length() <= 0 || richText.getHtml().equals("") || richText.getHtml() == null || richText.getHtml().equals(" ") || richText.getHtml().equals("\n") || (richText.getHtml().equals("<br><br>")) || (richText.getHtml().equals("&nbsp;"))) {
             return;
         }
         //调用日期Dialog
@@ -469,14 +515,6 @@ public class NewNote extends AppCompatActivity {
         mCalendar.set(Calendar.MILLISECOND, 0);
 
         //上面设置的就是日期和时间
-
-        //        //获取上面设置的 时间 的毫秒值
-//        long selectTime = mCalendar.getTimeInMillis();
-//
-//        // 如果当前时间大于设置的时间，那么就从第二天的设定时间开始
-//        if(systemTime > selectTime) {
-//            mCalendar.add(Calendar.DAY_OF_MONTH, 1);
-//        }
 
         //AlarmReceiver.class为广播接受者
         Intent intent = new Intent(NewNote.this, RemindReceiver.class);
@@ -752,6 +790,7 @@ public class NewNote extends AppCompatActivity {
             mSelected = Matisse.obtainResult(data);
             for (Uri uri : mSelected) {
                 Log.e("TAG", "------------------------得到选择对象" + "  uri: " + uri.toString());
+                //压缩图片
                 imageCompression(uri);
             }
         }
@@ -763,7 +802,7 @@ public class NewNote extends AppCompatActivity {
      * @param uri
      */
     private void imageCompression(Uri uri) {
-        String saveUri = null;
+
         Log.e("TAG", "--------------------进入方法成功");
         if (uri.toString().indexOf("content://media/") != -1) {
             //uri路径为相相册时
@@ -808,14 +847,13 @@ public class NewNote extends AppCompatActivity {
             file.delete();
             saveUri = compressedImageFile.toString();
         }
-        saveToDatabast();
+//        saveToDatabast();
         //在数据库添加图片uri
-        NoteImagePath noteImagePath = new NoteImagePath();
-        noteImagePath.setNoteId(nowId);
-        noteImagePath.setImagePath(saveUri);
-        noteImagePath.save();
-        Log.e("TAG", "richtext内容 = " + richText.getHtml().toString());
+//        NoteImagePath noteImagePath = new NoteImagePath();
+//        noteImagePath.setNoteId(nowId);
+//        noteImagePath.setImagePath(saveUri);
+//        noteImagePath.save();
+//        Log.e("TAG", "richtext内容 = " + richText.getHtml().toString());
     }
-
 
 }

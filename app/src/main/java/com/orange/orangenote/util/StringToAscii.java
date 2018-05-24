@@ -16,8 +16,8 @@ public class StringToAscii {
         for (char char1 : chars){
             result += (int) char1;
         }
-
         return result;
+
     }
 
 }

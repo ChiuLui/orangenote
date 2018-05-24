@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -189,14 +190,16 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         }
         //判断如果内容包含图片,则显示图片设置图片
         if (note.getContent().indexOf("/storage/emulated/0/Pictures/") != -1){
+            Log.e("TAG", "--------------------当前对象的内容 :"+ note.getContent() );
             List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").order("id desc").find(NoteImagePath.class);
             if (!(noteImagePaths.isEmpty())){
                 for (NoteImagePath noteImagePath : noteImagePaths){
                     String path = noteImagePath.getImagePath();
+                    Log.e("TAG", "--------------------得到的地址 :"+ path );
                     if (note.getContent().indexOf(path) != -1) {
                         Glide.with(mContext)
                                 .load(path)
-                                .fitCenter()
+                                .centerCrop()
                                 .into(holder.imageView_item);
                         holder.imageView_item.setVisibility(View.VISIBLE);
                         return;
