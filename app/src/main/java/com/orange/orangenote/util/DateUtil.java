@@ -65,4 +65,8 @@ public class DateUtil {
         return hour + ":" + minute;
     }
 
+    public static long getTimeStamp(){
+        return System.currentTimeMillis();
+    }
+
 }

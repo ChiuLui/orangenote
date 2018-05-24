@@ -83,11 +83,10 @@ public class NewNote extends AppCompatActivity {
 
     private int nowId;
 
+    /** 是否为旧标签 true: 旧标签 false: 新便签 */
     private boolean nowState;
 
     private Toolbar toolbar;
-
-    private EditText editText;
 
     private RichEditor richText;
 
@@ -234,9 +233,16 @@ public class NewNote extends AppCompatActivity {
      */
     private void saveToDatabast() {
         //如果数据现在的数据和传过来的数据不一样(修改了)而且不为null, 就保存数据.
-        if ( ((StringToAscii.stringToAscii(nowContent)) != (StringToAscii.stringToAscii(richText.getHtml()+""))) && ( ((richText.getHtml()).length() > 0) || !(richText.getHtml().equals("")) || (richText.getHtml() != null) || !(richText.getHtml().equals(" ")) || !(richText.getHtml().equals("\n")) ) ) {
+        if ( ((StringToAscii.stringToAscii(nowContent)) != (StringToAscii.stringToAscii(richText.getHtml())))
+                &&  ((richText.getHtml()).length() > 0)
+                && !(richText.getHtml().equals(""))
+                && (richText.getHtml() != null)
+                && !(richText.getHtml().equals(" "))
+                && !(richText.getHtml().equals("\n"))
+                && !(richText.getHtml().equals("<br><br>"))
+                && !(richText.getHtml().equals("&nbsp;")) ) {
             Note note = null;
-            if (isSave){
+            if (isSave || nowState){//如果是旧便签或保存过就得到旧对象
                 note = DataSupport.find(Note.class, nowId);
             } else {
                 //创建表
@@ -247,7 +253,6 @@ public class NewNote extends AppCompatActivity {
                 note.setYear(DateUtil.getNowYear());
                 note.setDate(DateUtil.getNowDate());
                 note.setTime(DateUtil.getNowTiem());
-                DataSupport.deleteAll(Note.class, "id = ?", nowId + "");
             } else {
                 //如果是新便签, 就用创建便签时的时间
                 note.setYear(nowYear);
@@ -255,20 +260,24 @@ public class NewNote extends AppCompatActivity {
                 note.setTime(nowTime);
             }
             //保存内容
-            note.setContent(richText.getHtml().toString());
+            note.setContent(richText.getHtml());
+            note.setTimeStamp(DateUtil.getTimeStamp());
             note.save();
             nowId = note.getId();
             nowContent = note.getContent();
             //把保存标志改变
             isSave = true;
+            Log.e("TAG", "-----------------保存内容richText.getHtml() :" + richText.getHtml());
+            Log.e("TAG", "-----------------保存内容note.getContent() :" + note.getContent());
         }
         //如果旧便签修改了变成空便签, 就从数据库删除
-        if ((richText.getHtml()).length() <= 0 || richText.getHtml().equals("") || richText.getHtml() == null || richText.getHtml().equals(" ") || richText.getHtml().equals("\n")) {
+        if ((richText.getHtml()).length() <= 0 || richText.getHtml().equals("") || richText.getHtml() == null || richText.getHtml().equals(" ") || richText.getHtml().equals("\n") || (richText.getHtml().equals("<br><br>")) || (richText.getHtml().equals("&nbsp;"))) {
             if (isRemind) {
                 stopRemind(nowId);
             }
             DataSupport.deleteAll(Note.class, "id = ?", nowId + "");
         }
+        Log.e("TAG", "当前时间毫秒值 = "+ DateUtil.getTimeStamp());
     }
 
 
@@ -375,7 +384,7 @@ public class NewNote extends AppCompatActivity {
     }
 
     private void setRemind() {
-        if ((richText.getHtml()).length() <= 0 || richText.getHtml().equals("") || richText.getHtml() == null || richText.getHtml().equals(" ") || richText.getHtml().equals("\n")) {
+        if ((richText.getHtml()).length() <= 0 || richText.getHtml().equals("") || richText.getHtml() == null || richText.getHtml().equals(" ") || richText.getHtml().equals("\n") || (richText.getHtml().equals("<br><br>")) || (richText.getHtml().equals("&nbsp;")) ) {
             return;
         }
         //调用日期Dialog

@@ -154,7 +154,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         holder.textView_title.setText(ContentUtil.getTitle(temp));
         holder.textView_content.setText(ContentUtil.getContent(temp));
         //当前内容长度是否为空内容, 隐藏或显示, 并且添加内边距补足高度
-        if (holder.textView_content.getText().length() <= 0 || holder.textView_content.getText().equals("") || holder.textView_content.getText() == null || holder.textView_content.getText().equals(" ") || holder.textView_content.getText().equals("\n")) {
+        if (holder.textView_content.getText().length() <= 0 || holder.textView_content.getText().equals("") || holder.textView_content.getText() == null || holder.textView_content.getText().equals(" ") || holder.textView_content.getText().equals("\n") || (holder.textView_content.equals("<br><br>")) || (holder.textView_content.equals("&nbsp;"))) {
             holder.textView_content.setVisibility(View.GONE);
             holder.linearLayout.setPadding(dp2px.dip2px(mContext, 15), dp2px.dip2px(mContext, 27), dp2px.dip2px(mContext, 15), dp2px.dip2px(mContext, 27));
         } else {
@@ -188,21 +188,26 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
             holder.checkBox_item.setChecked(false);
         }
         //判断如果内容包含图片,则显示图片设置图片
-        if (note.getContent().indexOf("<img src=") != -1){
-            List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);//.order("id desc")
+        if (note.getContent().indexOf("/storage/emulated/0/Pictures/") != -1){
+            List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").order("id desc").find(NoteImagePath.class);
             if (!(noteImagePaths.isEmpty())){
-                String path = noteImagePaths.get(0).getImagePath();
-                Glide.with(mContext)
-                        .load(path)
-                        .fitCenter()
-                        .crossFade()  //淡入淡出，也是默认动画
-                        .crossFade(1) //定义淡入淡出的时间间隔
-                        .into(holder.imageView_item);
-//                centerInside()
-//                center()
-//                centerCrop() //缩放图片让图片充满整个ImageView的边框，然后裁掉超出的部分。
-//                fitCenter()  // ImageView会被完全填充满，但是图片可能不能完全显示出。
-                holder.imageView_item.setVisibility(View.VISIBLE);
+                for (NoteImagePath noteImagePath : noteImagePaths){
+                    String path = noteImagePath.getImagePath();
+                    if (note.getContent().indexOf(path) != -1) {
+                        Glide.with(mContext)
+                                .load(path)
+                                .fitCenter()
+                                .into(holder.imageView_item);
+                        holder.imageView_item.setVisibility(View.VISIBLE);
+                        return;
+                /*centerInside()
+                center()
+                centerCrop() //缩放图片让图片充满整个ImageView的边框，然后裁掉超出的部分。
+                fitCenter()  // ImageView会被完全填充满，但是图片可能不能完全显示出。*/
+                    }
+                }
+            }else {
+                holder.imageView_item.setVisibility(View.GONE);
             }
         } else {
             holder.imageView_item.setVisibility(View.GONE);

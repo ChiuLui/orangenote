@@ -335,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
 
 //        noteList = DataSupport.findAll(Note.class);
         //查询倒序
-        noteList = DataSupport.order("id desc").find(Note.class);
+        noteList = DataSupport.order("timeStamp desc").find(Note.class);
         adapter = new NoteAdapter(MainActivity.this, this.noteList);
         recyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();

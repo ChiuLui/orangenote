@@ -35,6 +35,16 @@ public class Note extends DataSupport {
 
     private int minuteRemind;
 
+    private long timeStamp;
+
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
     public int getYearRemind() {
         return yearRemind;
     }
