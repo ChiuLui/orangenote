@@ -184,10 +184,23 @@ public class NewNote extends AppCompatActivity {
         });
 
         richText.setHtml(nowContent);
+
+        /**
+         * 监听内容改变
+         */
         richText.setOnTextChangeListener(new RichEditor.OnTextChangeListener() {
             @Override
             public void onTextChange(String text) {
-                saveToDatabast();
+                if ( !(richText.getHtml().isEmpty())
+                        && ((richText.getHtml()).length() > 0)
+                        && !(richText.getHtml().equals(""))
+                        && (richText.getHtml() != null)
+                        && !(richText.getHtml().equals(" "))
+                        && !(richText.getHtml().equals("\n"))
+                        && !(richText.getHtml().equals("<br><br>"))
+                        && !(richText.getHtml().equals("&nbsp;")) ) {
+                    saveToDatabast();
+                }
                 if (saveUri != null) {
                     saveNoteImagePath(nowId, saveUri);
                 }
@@ -295,6 +308,7 @@ public class NewNote extends AppCompatActivity {
         Log.e("TAG", "!!!!!!!!!!!!!!!!!!!!!!!!((StringToAscii.stringToAscii(nowContent)) != (StringToAscii.stringToAscii(richText.getHtml())))=" + result);
         if (((StringToAscii.stringToAscii(nowContent)) != (StringToAscii.stringToAscii(richText.getHtml())))
                 && ((richText.getHtml()).length() > 0)
+                && !(richText.getHtml().isEmpty())
                 && !(richText.getHtml().equals(""))
                 && (richText.getHtml() != null)
                 && !(richText.getHtml().equals(" "))
