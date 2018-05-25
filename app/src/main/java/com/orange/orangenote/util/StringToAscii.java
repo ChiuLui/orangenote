@@ -10,6 +10,11 @@ package com.orange.orangenote.util;
 
 public class StringToAscii {
 
+    /**
+     * 字符串转ASCII码
+     * @param value
+     * @return
+     */
     public static int stringToAscii(String value){
         char[] chars = value.toCharArray();
         int result = 0;

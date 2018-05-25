@@ -35,6 +35,10 @@ public class DateUtil {
         return year + "年" + month + "月" + day + "日" + "  " + hour + ":" + minute;
     }
 
+    /**
+     * 获取现在年份
+     * @return 年份字符串
+     */
     public static String getNowYear(){
         Calendar calendar = Calendar.getInstance();
         //获取系统的日期
@@ -43,6 +47,10 @@ public class DateUtil {
         return year + "年";
     }
 
+    /**
+     * 获取现在的日期
+     * @return 日期字符串
+     */
     public static String getNowDate(){
 
         Calendar calendar = Calendar.getInstance();
@@ -53,6 +61,10 @@ public class DateUtil {
         return month + "月" + day + "日";
     }
 
+    /**
+     * 获取现在的时间
+     * @return 返回时间字符串
+     */
     public static String getNowTiem(){
         Calendar calendar = Calendar.getInstance();
         //小时
@@ -65,6 +77,10 @@ public class DateUtil {
         return hour + ":" + minute;
     }
 
+    /**
+     * 获取现在的毫秒值
+     * @return
+     */
     public static long getTimeStamp(){
         return System.currentTimeMillis();
     }

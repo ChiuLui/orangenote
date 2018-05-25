@@ -68,6 +68,11 @@ public class ContentUtil {
         }
     }
 
+    /**
+     * 截取用于放在提示界面的内容
+     * @param content
+     * @return
+     */
     public static String getDialogContent(String content){
         String temp = content;
         if (content.length() <= 60){
@@ -77,6 +82,12 @@ public class ContentUtil {
         }
     }
 
+    /**
+     * 用于更换HTML中的换行和空格
+     * 用于剔除HTML格式
+     * @param content
+     * @return
+     */
     public static String getNoHtmlContent(String content){
         String temp = content;
         temp = temp.replaceAll("<br>", "\n"); //更换<br>和标签

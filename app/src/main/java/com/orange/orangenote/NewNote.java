@@ -34,7 +34,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -69,60 +68,76 @@ import android.support.v4.content.ContextCompat;
 
 public class NewNote extends AppCompatActivity {
 
+    /** 折叠工具栏 */
     private CollapsingToolbarLayout collapsingToolbarLayout;
 
+    /** 保存按钮 */
     private FloatingActionButton floatingActionButton;
 
+    /** 传过来的分钟 */
     private String nowTime;
 
+    /** 传过来的日期 */
     private String nowDate;
 
+    /** 传过来的年份 */
     private String nowYear;
 
+    /** 传过来的内容 */
     private String nowContent;
 
+    /** 传过来的Note对象Id */
     private int nowId;
 
-    /**
-     * 是否为旧标签 true: 旧标签 false: 新便签
-     */
+    /** 判断当前便签是否为旧标签  true:旧标签 false:新便签 */
     private boolean nowState;
 
+    /** 用来代替ActionBar的ToolBar */
     private Toolbar toolbar;
 
+    /** 富文本 */
     private RichEditor richText;
 
+    /** SP存储的保存对象 */
     private SharedPreferences.Editor editor;
 
+    /** 取SP存储的对象 */
     private SharedPreferences prefer;
 
+    /** 公共的年.月.日 */
     private int mYear, mMonth, mDay;
+
+    /** 日期对象 */
     private Calendar calender;
 
+    /** 是否设置了提醒 */
     public static boolean isRemind;
 
+    /** 公共的菜单对象 */
     private Menu menu;
 
+    /** 显示提醒的时间 */
     public static TextView textView_toolbar;
 
+    /** 当前对象是否保存过 */
     private boolean isSave = false;
 
+    /** 定义底部工具栏按钮 */
     private ImageButton imgbtn_break, imgbtn_rebreak, imgbtn_image, imgbtn_center, imgbtn_bold, imgbtn_italic, imgbtn_underline, imgbtn_fontsize, imgbtn_checkbox;
 
+    /** 富文本的字体大小 */
     private static int FONTSIZE = 4;
+
+    /** 当前是否居中 */
     private static boolean isFontCenter = false;
+
+    /** 图片选择的请求码 */
     private static final int REQUEST_CODE_CHOOSE = 1;//定义请求码常量
 
-    /**
-     * 需要保存的图片uri地址
-     */
+    /** 插入的图片uri地址 */
     private String saveUri = null;
 
-    /**
-     * 文本框的实时内容
-     */
-    private static String richTextContent = null;
-
+    /** 用于保存选择的图片URI */
     List<Uri> mSelected;
 
     @SuppressLint("ClickableViewAccessibility")
@@ -168,22 +183,14 @@ public class NewNote extends AppCompatActivity {
             }
         });
 
-//        editText = findViewById(R.id.edit_newnote_content);
-//
-//        editText.setText(nowContent);
         richText.setHtml(nowContent);
         richText.setOnTextChangeListener(new RichEditor.OnTextChangeListener() {
             @Override
             public void onTextChange(String text) {
-                richTextContent = text;
                 saveToDatabast();
-                if (!(saveUri.equals(""))) {
+                if (saveUri != null) {
                     saveNoteImagePath(nowId, saveUri);
                 }
-                Log.e("TAG", "richtext内容 = " + richText.getHtml().toString());
-                Log.e("TAG", "onTextChange: richTextContent =" + richTextContent);
-                Log.e("TAG", "onTextChange: text =" + text);
-                Log.e("TAG", "onTextChange: richText.getHtml =" + richText.getHtml());
             }
         });
 
@@ -240,9 +247,12 @@ public class NewNote extends AppCompatActivity {
         noteImagePath.setNoteId(nowId);
         noteImagePath.setImagePath(path);
         noteImagePath.save();
-        saveUri = "";
+        saveUri = null;
     }
 
+    /**
+     * 初始化底部工具栏监听
+     */
     private void initBottonToolBarListener() {
         imgbtn_image.setOnClickListener(new mClick());
         imgbtn_center.setOnClickListener(new mClick());
@@ -255,6 +265,9 @@ public class NewNote extends AppCompatActivity {
         imgbtn_underline.setOnClickListener(new mClick());
     }
 
+    /**
+     * 初始化底部工具栏控件
+     */
     private void initBottonToolBar() {
         imgbtn_image = findViewById(R.id.imgbtn_image);
         imgbtn_center = findViewById(R.id.imgbtn_center);
@@ -327,6 +340,11 @@ public class NewNote extends AppCompatActivity {
         Log.e("TAG", "当前时间毫秒值 = " + DateUtil.getTimeStamp());
     }
 
+    /**
+     * 菜单栏创建的回调
+     * @param menu
+     * @return
+     */
     public boolean onCreateOptionsMenu(Menu menu) {
         this.menu = menu;
         //加载菜单文件
@@ -334,6 +352,11 @@ public class NewNote extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * 菜单栏准备完成的回调
+     * @param menu
+     * @return
+     */
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.delete_toolbar).setVisible(true);
@@ -429,6 +452,9 @@ public class NewNote extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * 设置提醒时间
+     */
     private void setRemind() {
         if ((richText.getHtml()).length() <= 0 || richText.getHtml().equals("") || richText.getHtml() == null || richText.getHtml().equals(" ") || richText.getHtml().equals("\n") || (richText.getHtml().equals("<br><br>")) || (richText.getHtml().equals("&nbsp;"))) {
             return;
@@ -482,7 +508,6 @@ public class NewNote extends AppCompatActivity {
 
     /**
      * 设置提醒
-     *
      * @param year
      * @param month
      * @param day
@@ -658,6 +683,12 @@ public class NewNote extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * 权限返回的
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
@@ -683,6 +714,9 @@ public class NewNote extends AppCompatActivity {
         }
     }
 
+    /**
+     * 点击事件监听
+     */
     private class mClick implements View.OnClickListener {
         @Override
         public void onClick(View v) {
@@ -783,6 +817,12 @@ public class NewNote extends AppCompatActivity {
                 .forResult(REQUEST_CODE_CHOOSE);//请求码
     }
 
+    /**
+     * 选择图片后的回调
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -847,13 +887,6 @@ public class NewNote extends AppCompatActivity {
             file.delete();
             saveUri = compressedImageFile.toString();
         }
-//        saveToDatabast();
-        //在数据库添加图片uri
-//        NoteImagePath noteImagePath = new NoteImagePath();
-//        noteImagePath.setNoteId(nowId);
-//        noteImagePath.setImagePath(saveUri);
-//        noteImagePath.save();
-//        Log.e("TAG", "richtext内容 = " + richText.getHtml().toString());
     }
 
 }

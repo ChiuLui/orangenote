@@ -24,8 +24,9 @@ import org.litepal.crud.DataSupport;
 
 import java.util.List;
 
+
 /**
- * 适配器
+ * 自定义适配器
  * @author 神经大条蕾弟
  * @version 1.0
  * @date 2018/04/21 17:13
@@ -170,12 +171,12 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
             holder.checkBox_item.setVisibility(View.GONE);
         }
         //当待删除的列表为空时, 重置checkBok, 设置所有复选框为false
-        if (MainActivity.deleteNote == null || MainActivity.deleteNote.size() <= 0 ) {
+        if (MainActivity.deleteNote == null || MainActivity.deleteNote.size() <= 0) {
             holder.checkBox_item.setChecked(false);
             MainActivity.deleteNote.clear();
         }
         //当前是否处于ListView视图, 动态改变内容显示的单行还是多行模式
-        if (MainActivity.isListView){
+        if (MainActivity.isListView) {
             holder.textView_content.setEllipsize(TextUtils.TruncateAt.MARQUEE);
             holder.textView_content.setSingleLine(true);
         } else {
@@ -183,19 +184,17 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
             holder.textView_content.setSingleLine(false);
         }
         //判断是全选状态还是取消全选状态.
-        if (MainActivity.isAllCheck == MainActivity.isAllCheck_CHECK){
+        if (MainActivity.isAllCheck == MainActivity.isAllCheck_CHECK) {
             holder.checkBox_item.setChecked(true);
         } else if (MainActivity.isAllCheck == MainActivity.isAllCheck_UPCHECK) {
             holder.checkBox_item.setChecked(false);
         }
         //判断如果内容包含图片,则显示图片设置图片
-        if (note.getContent().indexOf("/storage/emulated/0/Pictures/") != -1){
-            Log.e("TAG", "--------------------当前对象的内容 :"+ note.getContent() );
+        if (note.getContent().indexOf("/storage/emulated/0/Pictures/") != -1) {
             List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").order("id desc").find(NoteImagePath.class);
-            if (!(noteImagePaths.isEmpty())){
-                for (NoteImagePath noteImagePath : noteImagePaths){
+            if (!(noteImagePaths.isEmpty())) {
+                for (NoteImagePath noteImagePath : noteImagePaths) {
                     String path = noteImagePath.getImagePath();
-                    Log.e("TAG", "--------------------得到的地址 :"+ path );
                     if (note.getContent().indexOf(path) != -1) {
                         Glide.with(mContext)
                                 .load(path)
@@ -209,7 +208,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                 fitCenter()  // ImageView会被完全填充满，但是图片可能不能完全显示出。*/
                     }
                 }
-            }else {
+            } else {
                 holder.imageView_item.setVisibility(View.GONE);
             }
         } else {

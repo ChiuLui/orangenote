@@ -3,6 +3,7 @@ package com.orange.orangenote.db;
 import org.litepal.crud.DataSupport;
 
 /**
+ * 插入的图片地址
  * @author 神经大条蕾弟
  * @version 1.0
  * @date 2018/05/23 16:24

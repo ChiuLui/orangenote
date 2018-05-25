@@ -39,43 +39,55 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    /** 滑动菜单 */
     private DrawerLayout drawerLayout_main;
 
-    private CoordinatorLayout coordinatorLayout;
-
+    /** 添加便签按钮 */
     private FloatingActionButton floatingActionButton;
 
+    /** 滑动菜单里面的页面 */
     private NavigationView navigationView;
 
+    /** 代替ActionBar的Toolbar */
     private Toolbar toolbar_main;
 
+    /** RecyclerView视图 */
     private RecyclerView recyclerView;
 
+    /** 自定义适配器 */
     private NoteAdapter adapter;
 
+    /** 储存Note对象List */
     private List<Note> noteList;
 
-    //得到ActionBar的实例
+    /** ActionBar对象 */
     private ActionBar actionBar;
 
+    /** 当前是否为删除状态 */
     public static boolean isDelete = false;
 
-    public static List<Integer> deleteposition;
-
+    /** 待删除的Note对象列表 */
     public static List<Note> deleteNote;
 
+    /** 菜单实例 */
     public static Menu menu;
 
+    /** 当前是否为列表视图 true:当前是列表视图  false:当前是瀑布流视图 */
     public static boolean isListView = true;
 
+    /** SP存储对象 */
     private SharedPreferences.Editor editor;
 
+    /** 取SP的对象 */
     private SharedPreferences prefer;
 
+    /** 列表对象管理器 */
     LinearLayoutManager linearLayoutManager;
 
+    /** 瀑布流对象管理器 */
     StaggeredGridLayoutManager staggeredGridLayoutManager;
 
+    /** 当前是否为全选状态 */
     public static int isAllCheck = 0;
 
     /** 是否全选状态_正常未全选 */
@@ -99,8 +111,6 @@ public class MainActivity extends AppCompatActivity {
 
         drawerLayout_main = findViewById(R.id.drawerlayout_main);
 
-        coordinatorLayout = findViewById(R.id.coordinatorLayout);
-
         floatingActionButton = findViewById(R.id.fab_main_add);
 
         navigationView = findViewById(R.id.nav_view);
@@ -119,8 +129,6 @@ public class MainActivity extends AppCompatActivity {
 
         //设置刷新适配器
         recordAdapter();
-
-        deleteposition = new ArrayList<>();
 
         deleteNote = new ArrayList<>();
 
