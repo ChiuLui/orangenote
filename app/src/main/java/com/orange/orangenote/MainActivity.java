@@ -232,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
                     menu.findItem(R.id.view_toolbar).setIcon(R.drawable.viewgallery);
                     isListView = true;
                 }
+                recordAdapter();
                 break;
                 //全选
             case R.id.allcheck_toolbar:

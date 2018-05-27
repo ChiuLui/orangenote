@@ -9,7 +9,8 @@ package com.orange.orangenote.util;
 
 public class ContentUtil {
 
-    private static final int LENGHT = 20;
+    private static final int TITLE_LENGHT = 20;
+    private static final int CONTENT_LENGHT = 100;
 
     /**
      * 把一段字符串截取成要显示的标题
@@ -24,14 +25,38 @@ public class ContentUtil {
         } else {
             //---没换行符
             //长度小于20个字,直接返回
-            if (temp.length() < LENGHT){
+            if (temp.length() < TITLE_LENGHT){
                 return temp;
             } else {
                 //否则截取前20个字
-                return temp.substring(0,LENGHT);
+                return temp.substring(0, TITLE_LENGHT);
             }
         }
     }
+
+    /**
+     * 在瀑布流界面用于裁剪标题
+     * @param content
+     * @param length
+     * @return
+     */
+    public static String getTitle(String content,int length){
+        String temp = content;
+        //---有换行符
+        if (temp.contains("\n")){
+            return temp.substring(0,temp.indexOf("\n"));
+        } else {
+            //---没换行符
+            //长度小于20个字,直接返回
+            if (temp.length() < length){
+                return temp;
+            } else {
+                //否则截取前20个字
+                return temp.substring(0, length);
+            }
+        }
+    }
+
 
     /**
      * 把一段字符串截取成要显示的内容概略
@@ -47,26 +72,81 @@ public class ContentUtil {
              if (temp.contains("\n")){
                  temp = temp.substring(0,temp.indexOf("\n"));
                  if (temp.length() > 0) {
-                     return temp;
+                     temp = temp;
                  } else {
-                     return "";
+                     temp = "";
                  }
              } else {
-                 if (content.substring(0,content.indexOf("\n")).length() > LENGHT) {
-                     return "..." + temp;
+                 if (content.substring(0,content.indexOf("\n")).length() > TITLE_LENGHT) {
+                     temp = "..." + temp;
                  } else {
-                     return temp;
+                     temp = temp;
                  }
              }
         } else {
             //没换行符
-            if (temp.length() < LENGHT){
-                return "";
+            if (temp.length() < TITLE_LENGHT){
+                temp = "";
             } else {
-                return temp.substring(LENGHT);
+                temp = temp.substring(TITLE_LENGHT);
             }
         }
+
+        //长度小于100个字,直接返回
+        if (temp.length() < CONTENT_LENGHT){
+            temp = temp;
+        } else {
+            //否则截取前100个字
+            temp = temp.substring(0,CONTENT_LENGHT) + "...";
+        }
+        return temp;
     }
+
+    /**
+     * 在瀑布流界面用于裁剪内容
+     * @param content
+     * @param title_lenght
+     * @return
+     */
+    public static String getContent(String content, int title_lenght){
+        String temp = content;
+        //---有换行符
+        if (temp.contains("\n")){
+            //截取换行符后面的文字
+            temp = temp.substring(temp.indexOf("\n")+1);//+1是因为不截取换行符
+            if (temp.contains("\n")){
+                temp = temp.substring(0,temp.indexOf("\n"));
+                if (temp.length() > 0) {
+                    temp = temp;
+                } else {
+                    temp = "";
+                }
+            } else {
+                if (content.substring(0,content.indexOf("\n")).length() > title_lenght) {
+                    temp = "..." + temp;
+                } else {
+                    temp = temp;
+                }
+            }
+        } else {
+            //没换行符
+            if (temp.length() < title_lenght){
+                temp = "";
+            } else {
+                temp = temp.substring(title_lenght);
+            }
+        }
+
+        //长度小于100个字,直接返回
+        if (temp.length() < CONTENT_LENGHT){
+            temp = temp;
+        } else {
+            //否则截取前100个字
+            temp = temp.substring(0,CONTENT_LENGHT) + "...";
+        }
+        return temp;
+    }
+
 
     /**
      * 截取用于放在提示界面的内容

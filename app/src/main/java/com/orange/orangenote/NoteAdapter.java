@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -81,7 +80,16 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         if (mContext == null) {
             mContext = parent.getContext();
         }
-        View view = LayoutInflater.from(mContext).inflate(R.layout.note_item, parent, false);
+        View view = null;
+        //根据不同的视图选择不同的布局
+        if (MainActivity.isListView){
+            //列表布局
+            view = LayoutInflater.from(mContext).inflate(R.layout.note_item, parent, false);
+        } else {
+            //瀑布流布局
+            view = LayoutInflater.from(mContext).inflate(R.layout.note_item2, parent, false);
+        }
+
         final ViewHolder viewHolder = new ViewHolder(view);
 
         viewHolder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
@@ -166,8 +174,14 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         Note note = mNoteList.get(position);
         String temp = note.getContent();//得到内容
         temp = ContentUtil.getNoHtmlContent(temp);
-        holder.textView_title.setText(ContentUtil.getTitle(temp));
-        holder.textView_content.setText(ContentUtil.getContent(temp));
+        //根据不同的内容视图设置不同的长度的标题和内容
+        if (MainActivity.isListView) {
+            holder.textView_title.setText(ContentUtil.getTitle(temp));
+            holder.textView_content.setText(ContentUtil.getContent(temp));
+        } else {
+            holder.textView_title.setText(ContentUtil.getTitle(temp,8));
+            holder.textView_content.setText(ContentUtil.getContent(temp, 8));
+        }
         //当前内容长度是否为空内容, 隐藏或显示, 并且添加内边距补足高度
         if (holder.textView_content.getText().length() <= 0 || holder.textView_content.getText().equals("") || holder.textView_content.getText() == null || holder.textView_content.getText().equals(" ") || holder.textView_content.getText().equals("\n") || (holder.textView_content.equals("<br><br>")) || (holder.textView_content.equals("&nbsp;"))) {
             holder.textView_content.setVisibility(View.GONE);
@@ -219,6 +233,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                         Glide.with(mContext)
                                 .load(path)
                                 .centerCrop()
+                                .crossFade(500)
                                 .into(holder.imageView_item);
                         holder.imageView_item.setVisibility(View.VISIBLE);
                         return;
