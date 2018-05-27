@@ -171,6 +171,11 @@ public class NewNote extends AppCompatActivity {
         richText.setEditorFontColor(Color.parseColor("#333333"));
         richText.setPadding(10, 10, 10, 10);
         richText.setPlaceholder("随便记点什么吧...");
+        richText.setHtml(nowContent);
+
+        /**
+         * 监听内容改变
+         */
         richText.setOnTextChangeListener(new RichEditor.OnTextChangeListener() {
             @Override
             public void onTextChange(String text) {
@@ -180,27 +185,32 @@ public class NewNote extends AppCompatActivity {
                 if (StringToAscii.stringToAscii(nowContent) == StringToAscii.stringToAscii(text)) {
                     imgbtn_break.setVisibility(View.GONE);
                 }
-            }
-        });
-
-        richText.setHtml(nowContent);
-
-        /**
-         * 监听内容改变
-         */
-        richText.setOnTextChangeListener(new RichEditor.OnTextChangeListener() {
-            @Override
-            public void onTextChange(String text) {
+                //不为空内容
                 if ( !(richText.getHtml().isEmpty())
-                        && ((richText.getHtml()).length() > 0)
-                        && !(richText.getHtml().equals(""))
-                        && (richText.getHtml() != null)
-                        && !(richText.getHtml().equals(" "))
-                        && !(richText.getHtml().equals("\n"))
-                        && !(richText.getHtml().equals("<br><br>"))
-                        && !(richText.getHtml().equals("&nbsp;")) ) {
+                        && (text.length() > 0)
+                        && !(text.equals(""))
+                        && (text != null)
+                        && !(text.equals(" "))
+                        && !(text.equals("\n"))
+                        && !(text.equals("<br><br>"))
+                        && !(text.equals("&nbsp;")) ) {
+                    //保存
                     saveToDatabast();
+
+                    //从数据库删除不存在的图片地址
+                    List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", nowId + "").find(NoteImagePath.class);
+                    if (!(noteImagePaths.isEmpty())) {
+                        //取出每个对象对比
+                        for (NoteImagePath imagePath : noteImagePaths) {
+                            //没有就从列表中删除
+                            if (text.indexOf(imagePath.getImagePath()) == -1){
+                                Toast.makeText(NewNote.this, "删除图片", Toast.LENGTH_SHORT).show();
+                                imagePath.delete();
+                            }
+                        }
+                    }
                 }
+                //添加插入的图片地址到数据库
                 if (saveUri != null) {
                     saveNoteImagePath(nowId, saveUri);
                 }
@@ -335,7 +345,11 @@ public class NewNote extends AppCompatActivity {
             }
             //保存内容
             note.setContent(richText.getHtml());
-            note.setTimeStamp(DateUtil.getTimeStamp());
+            if (note.isTop()){
+                note.setTimeStamp(DateUtil.getTimeStamp() + MainActivity.ADDTIMESTAMP);
+            } else {
+                note.setTimeStamp(DateUtil.getTimeStamp());
+            }
             note.save();
             nowId = note.getId();
             nowContent = note.getContent();
@@ -377,6 +391,7 @@ public class NewNote extends AppCompatActivity {
         menu.findItem(R.id.view_toolbar).setVisible(false);
         menu.findItem(R.id.allcheck_toolbar).setVisible(false);
         menu.findItem(R.id.remind_toolbar).setVisible(true);
+        menu.findItem(R.id.top_toolbar).setVisible(false);
         if (isRemind) {
             menu.findItem(R.id.remind_toolbar).setIcon(R.drawable.unclock);
             showRemindTime();

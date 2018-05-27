@@ -20,6 +20,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -96,6 +97,10 @@ public class MainActivity extends AppCompatActivity {
     public static final int isAllCheck_CHECK = 1;
     /** 是否全选状态_取消全选后 */
     public static final int isAllCheck_UPCHECK = 2;
+
+    public static final long ADDTIMESTAMP = 1000000000*100;
+
+    public static boolean isTop = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -195,6 +200,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (!isDelete){
             menu.findItem(R.id.delete_toolbar).setVisible(false);
+            menu.findItem(R.id.top_toolbar).setVisible(false);
             menu.findItem(R.id.allcheck_toolbar).setVisible(false);
             menu.findItem(R.id.view_toolbar).setVisible(true);
         }
@@ -211,9 +217,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+                //home键
             case android.R.id.home:
                 drawerLayout_main.openDrawer(GravityCompat.START);
                 break;
+                //切换视图
             case R.id.view_toolbar:
                 if (isListView) {
                     recyclerView.setLayoutManager(staggeredGridLayoutManager);
@@ -249,6 +257,53 @@ public class MainActivity extends AppCompatActivity {
                 }
                 adapter.notifyDataSetChanged();
                 break;
+                //置顶
+            case R.id.top_toolbar:
+                Toast.makeText(this, "点击置顶按钮", Toast.LENGTH_SHORT).show();
+                //如果待删除数组不为空
+                if (deleteNote != null && deleteNote.size() > 0) {
+                            //点击
+                            if (isDelete) {
+                                //把退出删除模式
+                                isDelete = false;
+                                isAllCheck = isAllCheck_NORMAL;
+                                menu.findItem(R.id.delete_toolbar).setVisible(false);
+                                menu.findItem(R.id.top_toolbar).setVisible(false);
+                                menu.findItem(R.id.allcheck_toolbar).setVisible(false);
+                                menu.findItem(R.id.view_toolbar).setVisible(true);
+                            }
+                            //遍历待删除列表 增加毫秒值
+                            for (Note note : deleteNote) {
+                                if (note.isTop() && isTop) {
+                                    note.setTop(false);
+                                    Log.e("TAG", "原本毫秒值" + note.getTimeStamp());
+                                    note.setTimeStamp(note.getTimeStamp() - ADDTIMESTAMP);
+                                    note.save();
+                                } else if (!(note.isTop()) && !(isTop)){
+                                    note.setTop(true);
+                                    Log.e("TAG", "原本毫秒值" + note.getTimeStamp());
+                                    note.setTimeStamp(note.getTimeStamp() + ADDTIMESTAMP);
+                                    note.save();
+                                }
+                            }
+                            //清除待删除列表
+                            deleteNote.clear();
+                            //刷新适配器
+                            recordAdapter();
+                } else {
+                    //不满足条件的话, 只退出删除模式, 刷新视图
+                    if (isDelete) {
+                        isDelete = false;
+                        deleteNote.clear();
+                        isAllCheck = isAllCheck_NORMAL;
+                        menu.findItem(R.id.delete_toolbar).setVisible(false);
+                        menu.findItem(R.id.top_toolbar).setVisible(false);
+                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
+                        menu.findItem(R.id.view_toolbar).setVisible(true);
+                    }
+                    adapter.notifyDataSetChanged();
+                }
+                break;
                 //删除
             case R.id.delete_toolbar:
                 //如果待删除数组不为空
@@ -267,6 +322,7 @@ public class MainActivity extends AppCompatActivity {
                                 isDelete = false;
                                 isAllCheck = isAllCheck_NORMAL;
                                 menu.findItem(R.id.delete_toolbar).setVisible(false);
+                                menu.findItem(R.id.top_toolbar).setVisible(false);
                                 menu.findItem(R.id.allcheck_toolbar).setVisible(false);
                                 menu.findItem(R.id.view_toolbar).setVisible(true);
                             }
@@ -320,6 +376,7 @@ public class MainActivity extends AppCompatActivity {
                         deleteNote.clear();
                         isAllCheck = isAllCheck_NORMAL;
                         menu.findItem(R.id.delete_toolbar).setVisible(false);
+                        menu.findItem(R.id.top_toolbar).setVisible(false);
                         menu.findItem(R.id.allcheck_toolbar).setVisible(false);
                         menu.findItem(R.id.view_toolbar).setVisible(true);
                     }
@@ -373,6 +430,7 @@ public class MainActivity extends AppCompatActivity {
                     isDelete = false;
                     isAllCheck = isAllCheck_NORMAL;
                     menu.findItem(R.id.delete_toolbar).setVisible(false);
+                    menu.findItem(R.id.top_toolbar).setVisible(false);
                     menu.findItem(R.id.allcheck_toolbar).setVisible(false);
                     menu.findItem(R.id.view_toolbar).setVisible(true);
                     deleteNote.clear();//清除待删除列表
@@ -393,6 +451,7 @@ public class MainActivity extends AppCompatActivity {
             isDelete = false;
             isAllCheck = isAllCheck_NORMAL;
             menu.findItem(R.id.delete_toolbar).setVisible(false);
+            menu.findItem(R.id.top_toolbar).setVisible(false);
             menu.findItem(R.id.allcheck_toolbar).setVisible(false);
             menu.findItem(R.id.view_toolbar).setVisible(true);
             deleteNote.clear();//清除待删除列表

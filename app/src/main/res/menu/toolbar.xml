@@ -12,6 +12,11 @@
         android:title="提醒"
         app:showAsAction="ifRoom"/>
     <item
+        android:id="@+id/top_toolbar"
+        android:icon="@drawable/top"
+        android:title="置顶"
+        app:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/delete_toolbar"
         android:icon="@drawable/delete"
         android:title="删除"

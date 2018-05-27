@@ -37,6 +37,16 @@ public class Note extends DataSupport {
 
     private long timeStamp;
 
+    private boolean isTop;
+
+    public boolean isTop() {
+        return isTop;
+    }
+
+    public void setTop(boolean top) {
+        isTop = top;
+    }
+
     public long getTimeStamp() {
         return timeStamp;
     }

@@ -27,6 +27,7 @@ import java.util.List;
 
 /**
  * 自定义适配器
+ *
  * @author 神经大条蕾弟
  * @version 1.0
  * @date 2018/04/21 17:13
@@ -93,9 +94,19 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                     if (!MainActivity.isDelete) {
                         MainActivity.deleteNote.clear();
                         MainActivity.isDelete = true;
-                        //隐藏切换布局图标  显示删除图标
+                        //判断长按的对象是否置顶了
+                        if (note.isTop()) {
+                            MainActivity.isTop = true;
+                            MainActivity.menu.findItem(R.id.top_toolbar).setIcon(R.drawable.download);
+                        } else {
+                            MainActivity.isTop = false;
+                            MainActivity.menu.findItem(R.id.top_toolbar).setIcon(R.drawable.top);
+
+                        }
+                        //隐藏切换布局图标  显示删除图标和置顶图标
                         MainActivity.menu.findItem(R.id.view_toolbar).setVisible(false);
                         MainActivity.menu.findItem(R.id.delete_toolbar).setVisible(true);
+                        MainActivity.menu.findItem(R.id.top_toolbar).setVisible(true);
                         MainActivity.menu.findItem(R.id.allcheck_toolbar).setVisible(true);
                     }
                     notifyDataSetChanged();
@@ -132,14 +143,16 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                     mContext.startActivity(intent);
                 } else {
                     //在删除模式下
-                    //点击item, 如果当前复选框被选中就显示未选中并且待删除列表中移除对象
-                    if (viewHolder.checkBox_item.isChecked()) {
-                        MainActivity.deleteNote.remove(note);
-                        viewHolder.checkBox_item.setChecked(false);
-                    } else {
-                        //如果当前复选框为未选中, 设置选中, 并且添加到待删除列表
-                        MainActivity.deleteNote.add(note);
-                        viewHolder.checkBox_item.setChecked(true);
+                    if (note.isTop() == MainActivity.isTop) {
+                        //点击item, 如果当前复选框被选中就显示未选中并且待删除列表中移除对象
+                        if (viewHolder.checkBox_item.isChecked()) {
+                            MainActivity.deleteNote.remove(note);
+                            viewHolder.checkBox_item.setChecked(false);
+                        } else {
+                            //如果当前复选框为未选中, 设置选中, 并且添加到待删除列表
+                            MainActivity.deleteNote.add(note);
+                            viewHolder.checkBox_item.setChecked(true);
+                        }
                     }
                 }
             }
@@ -166,7 +179,10 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         holder.textView_itme.setText(note.getYear() + note.getDate() + "  " + note.getTime());
         //如果当前是否为删除模式, 显示或隐藏复选框
         if (MainActivity.isDelete) {
-            holder.checkBox_item.setVisibility(View.VISIBLE);
+            // 当前对象 的状态和 长按 的状态一样才能显示
+            if (note.isTop() == MainActivity.isTop) {
+                holder.checkBox_item.setVisibility(View.VISIBLE);
+            }
         } else {
             holder.checkBox_item.setVisibility(View.GONE);
         }
@@ -185,9 +201,13 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         }
         //判断是全选状态还是取消全选状态.
         if (MainActivity.isAllCheck == MainActivity.isAllCheck_CHECK) {
-            holder.checkBox_item.setChecked(true);
+            if (note.isTop() == MainActivity.isTop) {
+                holder.checkBox_item.setChecked(true);
+            }
         } else if (MainActivity.isAllCheck == MainActivity.isAllCheck_UPCHECK) {
-            holder.checkBox_item.setChecked(false);
+            if (note.isTop() == MainActivity.isTop) {
+                holder.checkBox_item.setChecked(false);
+            }
         }
         //判断如果内容包含图片,则显示图片设置图片
         if (note.getContent().indexOf("/storage/emulated/0/Pictures/") != -1) {
