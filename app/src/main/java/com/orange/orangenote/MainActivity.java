@@ -30,6 +30,7 @@ import android.widget.Toast;
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.util.DateUtil;
+import com.yalantis.phoenix.PullToRefreshView;
 
 import org.litepal.crud.DataSupport;
 
@@ -102,6 +103,10 @@ public class MainActivity extends AppCompatActivity {
 
     public static boolean isTop = false;
 
+    private PullToRefreshView mPullToRefreshView;
+
+    public static final int REFRESH_DELAY = 500;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -121,6 +126,28 @@ public class MainActivity extends AppCompatActivity {
         navigationView = findViewById(R.id.nav_view);
 
         recyclerView = findViewById(R.id.recycler_main);
+
+        mPullToRefreshView = findViewById(R.id.pull_to_refresh);
+        mPullToRefreshView.setOnRefreshListener(new PullToRefreshView.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                mPullToRefreshView.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        //创建密码
+                        //输入密码
+                        //正确跳转
+                        //错误不操作
+
+                        //跳转
+                        Intent intent = new Intent(MainActivity.this, SecretActivity.class);
+                        startActivity(intent);
+
+                        mPullToRefreshView.setRefreshing(false);
+                    }
+                }, REFRESH_DELAY);
+            }
+        });
 
         linearLayoutManager = new LinearLayoutManager(MainActivity.this, LinearLayoutManager.VERTICAL, false);
 
@@ -193,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         this.menu = menu;
+        menu.findItem(R.id.secret_toolbar).setIcon(R.drawable.password_close);
         if (isListView){
             menu.findItem(R.id.view_toolbar).setIcon(R.drawable.viewgallery);
         } else {
@@ -200,6 +228,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (!isDelete){
             menu.findItem(R.id.delete_toolbar).setVisible(false);
+            menu.findItem(R.id.secret_toolbar).setVisible(false);
             menu.findItem(R.id.top_toolbar).setVisible(false);
             menu.findItem(R.id.allcheck_toolbar).setVisible(false);
             menu.findItem(R.id.view_toolbar).setVisible(true);
@@ -258,6 +287,46 @@ public class MainActivity extends AppCompatActivity {
                 }
                 adapter.notifyDataSetChanged();
                 break;
+            //私密
+            case R.id.secret_toolbar:
+                Toast.makeText(this, "设为私密", Toast.LENGTH_SHORT).show();
+                //如果待删除数组不为空
+                if (deleteNote != null && deleteNote.size() > 0) {
+                    //点击
+                    if (isDelete) {
+                        //把退出删除模式
+                        isDelete = false;
+                        isAllCheck = isAllCheck_NORMAL;
+                        menu.findItem(R.id.secret_toolbar).setVisible(false);
+                        menu.findItem(R.id.delete_toolbar).setVisible(false);
+                        menu.findItem(R.id.top_toolbar).setVisible(false);
+                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
+                        menu.findItem(R.id.view_toolbar).setVisible(true);
+                    }
+                    //遍历待删除列表 设为私密便签
+                    for (Note note : deleteNote) {
+                            note.setSecret(true);
+                            note.save();
+                    }
+                    //清除待删除列表
+                    deleteNote.clear();
+                    //刷新适配器
+                    recordAdapter();
+                } else {
+                    //不满足条件的话, 只退出删除模式, 刷新视图
+                    if (isDelete) {
+                        isDelete = false;
+                        deleteNote.clear();
+                        isAllCheck = isAllCheck_NORMAL;
+                        menu.findItem(R.id.secret_toolbar).setVisible(false);
+                        menu.findItem(R.id.delete_toolbar).setVisible(false);
+                        menu.findItem(R.id.top_toolbar).setVisible(false);
+                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
+                        menu.findItem(R.id.view_toolbar).setVisible(true);
+                    }
+                    adapter.notifyDataSetChanged();
+                }
+                break;
                 //置顶
             case R.id.top_toolbar:
                 Toast.makeText(this, "点击置顶按钮", Toast.LENGTH_SHORT).show();
@@ -268,6 +337,7 @@ public class MainActivity extends AppCompatActivity {
                                 //把退出删除模式
                                 isDelete = false;
                                 isAllCheck = isAllCheck_NORMAL;
+                                menu.findItem(R.id.secret_toolbar).setVisible(false);
                                 menu.findItem(R.id.delete_toolbar).setVisible(false);
                                 menu.findItem(R.id.top_toolbar).setVisible(false);
                                 menu.findItem(R.id.allcheck_toolbar).setVisible(false);
@@ -297,6 +367,7 @@ public class MainActivity extends AppCompatActivity {
                         isDelete = false;
                         deleteNote.clear();
                         isAllCheck = isAllCheck_NORMAL;
+                        menu.findItem(R.id.secret_toolbar).setVisible(false);
                         menu.findItem(R.id.delete_toolbar).setVisible(false);
                         menu.findItem(R.id.top_toolbar).setVisible(false);
                         menu.findItem(R.id.allcheck_toolbar).setVisible(false);
@@ -322,6 +393,7 @@ public class MainActivity extends AppCompatActivity {
                                 //把退出删除模式
                                 isDelete = false;
                                 isAllCheck = isAllCheck_NORMAL;
+                                menu.findItem(R.id.secret_toolbar).setVisible(false);
                                 menu.findItem(R.id.delete_toolbar).setVisible(false);
                                 menu.findItem(R.id.top_toolbar).setVisible(false);
                                 menu.findItem(R.id.allcheck_toolbar).setVisible(false);
@@ -344,7 +416,7 @@ public class MainActivity extends AppCompatActivity {
                                 DataSupport.deleteAll(NoteImagePath.class, "noteId = ?" , note.getId()+"");
 
                                 //如果设置了提醒功能
-                                if (note.getRemind()) {
+                                if (note.isRemind()) {
                                     //取消提醒
                                     Intent intent = new Intent(MainActivity.this, RemindReceiver.class);
                                     PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, note.getId(),
@@ -376,6 +448,7 @@ public class MainActivity extends AppCompatActivity {
                         isDelete = false;
                         deleteNote.clear();
                         isAllCheck = isAllCheck_NORMAL;
+                        menu.findItem(R.id.secret_toolbar).setVisible(false);
                         menu.findItem(R.id.delete_toolbar).setVisible(false);
                         menu.findItem(R.id.top_toolbar).setVisible(false);
                         menu.findItem(R.id.allcheck_toolbar).setVisible(false);
@@ -401,7 +474,7 @@ public class MainActivity extends AppCompatActivity {
 
 //        noteList = DataSupport.findAll(Note.class);
         //查询倒序
-        noteList = DataSupport.order("timeStamp desc").find(Note.class);
+        noteList = DataSupport.where("isSecret = ?", "0").order("timeStamp desc").find(Note.class);
         adapter = new NoteAdapter(MainActivity.this, this.noteList);
         recyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
@@ -430,6 +503,7 @@ public class MainActivity extends AppCompatActivity {
                 if (isDelete) {
                     isDelete = false;
                     isAllCheck = isAllCheck_NORMAL;
+                    menu.findItem(R.id.secret_toolbar).setVisible(false);
                     menu.findItem(R.id.delete_toolbar).setVisible(false);
                     menu.findItem(R.id.top_toolbar).setVisible(false);
                     menu.findItem(R.id.allcheck_toolbar).setVisible(false);
@@ -451,6 +525,7 @@ public class MainActivity extends AppCompatActivity {
         if (isDelete) {
             isDelete = false;
             isAllCheck = isAllCheck_NORMAL;
+            menu.findItem(R.id.secret_toolbar).setVisible(false);
             menu.findItem(R.id.delete_toolbar).setVisible(false);
             menu.findItem(R.id.top_toolbar).setVisible(false);
             menu.findItem(R.id.allcheck_toolbar).setVisible(false);
