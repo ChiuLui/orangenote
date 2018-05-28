@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -25,6 +26,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.orange.orangenote.db.Note;
@@ -41,71 +43,123 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    /** 滑动菜单 */
+    /**
+     * 滑动菜单
+     */
     private DrawerLayout drawerLayout_main;
 
-    /** 添加便签按钮 */
+    /**
+     * 添加便签按钮
+     */
     private FloatingActionButton floatingActionButton;
 
-    /** 滑动菜单里面的页面 */
+    /**
+     * 滑动菜单里面的页面
+     */
     private NavigationView navigationView;
 
-    /** 代替ActionBar的Toolbar */
+    /**
+     * 代替ActionBar的Toolbar
+     */
     private Toolbar toolbar_main;
 
-    /** RecyclerView视图 */
+    /**
+     * RecyclerView视图
+     */
     private RecyclerView recyclerView;
 
-    /** 自定义适配器 */
+    /**
+     * 自定义适配器
+     */
     private NoteAdapter adapter;
 
-    /** 储存Note对象List */
+    /**
+     * 储存Note对象List
+     */
     private List<Note> noteList;
 
-    /** ActionBar对象 */
+    /**
+     * ActionBar对象
+     */
     private ActionBar actionBar;
 
-    /** 当前是否为删除状态 */
+    /**
+     * 当前是否为删除状态
+     */
     public static boolean isDelete = false;
 
-    /** 待删除的Note对象列表 */
+    /**
+     * 待删除的Note对象列表
+     */
     public static List<Note> deleteNote;
 
-    /** 菜单实例 */
+    /**
+     * 菜单实例
+     */
     public static Menu menu;
 
-    /** 当前是否为列表视图 true:当前是列表视图  false:当前是瀑布流视图 */
+    /**
+     * 当前是否为列表视图 true:当前是列表视图  false:当前是瀑布流视图
+     */
     public static boolean isListView = true;
 
-    /** SP存储对象 */
+    /**
+     * SP存储对象
+     */
     private SharedPreferences.Editor editor;
 
-    /** 取SP的对象 */
+    /**
+     * 取SP的对象
+     */
     private SharedPreferences prefer;
 
-    /** 列表对象管理器 */
+    /**
+     * 列表对象管理器
+     */
     LinearLayoutManager linearLayoutManager;
 
-    /** 瀑布流对象管理器 */
+    /**
+     * 瀑布流对象管理器
+     */
     StaggeredGridLayoutManager staggeredGridLayoutManager;
 
-    /** 当前是否为全选状态 */
+    /**
+     * 当前是否为全选状态
+     */
     public static int isAllCheck = 0;
 
-    /** 是否全选状态_正常未全选 */
+    /**
+     * 是否全选状态_正常未全选
+     */
     public static final int isAllCheck_NORMAL = 0;
-    /** 是否全选状态_全选中 */
+    /**
+     * 是否全选状态_全选中
+     */
     public static final int isAllCheck_CHECK = 1;
-    /** 是否全选状态_取消全选后 */
+    /**
+     * 是否全选状态_取消全选后
+     */
     public static final int isAllCheck_UPCHECK = 2;
 
-    public static final long ADDTIMESTAMP = 1000000000*100;
+    /**
+     * 置顶增加的毫秒值
+     */
+    public static final long ADDTIMESTAMP = 1000000000 * 100;
 
+    /**
+     * 判断是否置顶 true:置顶  false:未置顶
+     */
     public static boolean isTop = false;
 
+    /**
+     * 下拉刷新
+     */
     private PullToRefreshView mPullToRefreshView;
 
-    public static final int REFRESH_DELAY = 500;
+    /**
+     * 下拉刷新时间
+     */
+    public static final int REFRESH_DELAY = 2000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,6 +182,10 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recycler_main);
 
         mPullToRefreshView = findViewById(R.id.pull_to_refresh);
+
+        /**
+         * 下拉刷新回调
+         */
         mPullToRefreshView.setOnRefreshListener(new PullToRefreshView.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -135,13 +193,31 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         //创建密码
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("创建密码")
+                                .setIcon(R.mipmap.orangenote_circle)
+                                .setMessage("创建用于访问 私密便签 的密码.")
+                                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Intent intent = new Intent(MainActivity.this, SecretActivity.class);
+                                        startActivity(intent);
+                                    }
+                                })
+                                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                    }
+                                })
+                                .show();
                         //输入密码
                         //正确跳转
                         //错误不操作
 
-                        //跳转
-                        Intent intent = new Intent(MainActivity.this, SecretActivity.class);
-                        startActivity(intent);
+//                        //跳转
+//                        Intent intent = new Intent(MainActivity.this, SecretActivity.class);
+//                        startActivity(intent);
 
                         mPullToRefreshView.setRefreshing(false);
                     }
@@ -175,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
             actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
             //设置Applogo
             actionBar.setLogo(R.mipmap.orange);
+            actionBar.setTitle("OrangeNote");
         }
 
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
@@ -191,6 +268,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("nowTime", nowTime);
                 intent.putExtra("nowContent", nowContent);
                 intent.putExtra("nowState", nowState);
+                intent.putExtra("nowIsSecret", false);
                 startActivity(intent);
             }
         });
@@ -221,12 +299,12 @@ public class MainActivity extends AppCompatActivity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         this.menu = menu;
         menu.findItem(R.id.secret_toolbar).setIcon(R.drawable.password_close);
-        if (isListView){
+        if (isListView) {
             menu.findItem(R.id.view_toolbar).setIcon(R.drawable.viewgallery);
         } else {
             menu.findItem(R.id.view_toolbar).setIcon(R.drawable.viewlist);
         }
-        if (!isDelete){
+        if (!isDelete) {
             menu.findItem(R.id.delete_toolbar).setVisible(false);
             menu.findItem(R.id.secret_toolbar).setVisible(false);
             menu.findItem(R.id.top_toolbar).setVisible(false);
@@ -246,11 +324,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-                //home键
+            //home键
             case android.R.id.home:
                 drawerLayout_main.openDrawer(GravityCompat.START);
                 break;
-                //切换视图
+            //切换视图
             case R.id.view_toolbar:
                 if (isListView) {
                     recyclerView.setLayoutManager(staggeredGridLayoutManager);
@@ -263,23 +341,23 @@ public class MainActivity extends AppCompatActivity {
                 }
                 recordAdapter();
                 break;
-                //全选
+            //全选
             case R.id.allcheck_toolbar:
                 //每次点击判断是否全选
-                if (deleteNote.size() != noteList.size()){
+                if (deleteNote.size() != noteList.size()) {
                     //不是全选就选择正常状态
                     isAllCheck = isAllCheck_NORMAL;
                 }
                 //是正常状态下点击
-                if (isAllCheck == isAllCheck_NORMAL){
+                if (isAllCheck == isAllCheck_NORMAL) {
                     //全选
                     isAllCheck = isAllCheck_CHECK;
                     deleteNote.clear();
-                    for (Note note : noteList){
+                    for (Note note : noteList) {
                         deleteNote.add(note);
                     }
                     //在全选中状态下点击
-                } else if (isAllCheck == isAllCheck_CHECK){
+                } else if (isAllCheck == isAllCheck_CHECK) {
                     //取消全选
                     isAllCheck = isAllCheck_UPCHECK;
                     deleteNote.clear();
@@ -305,8 +383,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                     //遍历待删除列表 设为私密便签
                     for (Note note : deleteNote) {
-                            note.setSecret(true);
-                            note.save();
+                        note.setSecret(true);
+                        note.save();
                     }
                     //清除待删除列表
                     deleteNote.clear();
@@ -327,40 +405,40 @@ public class MainActivity extends AppCompatActivity {
                     adapter.notifyDataSetChanged();
                 }
                 break;
-                //置顶
+            //置顶
             case R.id.top_toolbar:
                 Toast.makeText(this, "点击置顶按钮", Toast.LENGTH_SHORT).show();
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
-                            //点击
-                            if (isDelete) {
-                                //把退出删除模式
-                                isDelete = false;
-                                isAllCheck = isAllCheck_NORMAL;
-                                menu.findItem(R.id.secret_toolbar).setVisible(false);
-                                menu.findItem(R.id.delete_toolbar).setVisible(false);
-                                menu.findItem(R.id.top_toolbar).setVisible(false);
-                                menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                                menu.findItem(R.id.view_toolbar).setVisible(true);
-                            }
-                            //遍历待删除列表 增加毫秒值
-                            for (Note note : deleteNote) {
-                                if (note.isTop() && isTop) {
-                                    note.setTop(false);
-                                    Log.e("TAG", "原本毫秒值" + note.getTimeStamp());
-                                    note.setTimeStamp(note.getTimeStamp() - ADDTIMESTAMP);
-                                    note.save();
-                                } else if (!(note.isTop()) && !(isTop)){
-                                    note.setTop(true);
-                                    Log.e("TAG", "原本毫秒值" + note.getTimeStamp());
-                                    note.setTimeStamp(note.getTimeStamp() + ADDTIMESTAMP);
-                                    note.save();
-                                }
-                            }
-                            //清除待删除列表
-                            deleteNote.clear();
-                            //刷新适配器
-                            recordAdapter();
+                    //点击
+                    if (isDelete) {
+                        //把退出删除模式
+                        isDelete = false;
+                        isAllCheck = isAllCheck_NORMAL;
+                        menu.findItem(R.id.secret_toolbar).setVisible(false);
+                        menu.findItem(R.id.delete_toolbar).setVisible(false);
+                        menu.findItem(R.id.top_toolbar).setVisible(false);
+                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
+                        menu.findItem(R.id.view_toolbar).setVisible(true);
+                    }
+                    //遍历待删除列表 增加毫秒值
+                    for (Note note : deleteNote) {
+                        if (note.isTop() && isTop) {
+                            note.setTop(false);
+                            Log.e("TAG", "原本毫秒值" + note.getTimeStamp());
+                            note.setTimeStamp(note.getTimeStamp() - ADDTIMESTAMP);
+                            note.save();
+                        } else if (!(note.isTop()) && !(isTop)) {
+                            note.setTop(true);
+                            Log.e("TAG", "原本毫秒值" + note.getTimeStamp());
+                            note.setTimeStamp(note.getTimeStamp() + ADDTIMESTAMP);
+                            note.save();
+                        }
+                    }
+                    //清除待删除列表
+                    deleteNote.clear();
+                    //刷新适配器
+                    recordAdapter();
                 } else {
                     //不满足条件的话, 只退出删除模式, 刷新视图
                     if (isDelete) {
@@ -376,7 +454,7 @@ public class MainActivity extends AppCompatActivity {
                     adapter.notifyDataSetChanged();
                 }
                 break;
-                //删除
+            //删除
             case R.id.delete_toolbar:
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
@@ -413,7 +491,7 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
                                 //删除当前NoteId图片地址的数据库数据
-                                DataSupport.deleteAll(NoteImagePath.class, "noteId = ?" , note.getId()+"");
+                                DataSupport.deleteAll(NoteImagePath.class, "noteId = ?", note.getId() + "");
 
                                 //如果设置了提醒功能
                                 if (note.isRemind()) {

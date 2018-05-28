@@ -13,31 +13,55 @@ import org.litepal.crud.DataSupport;
 
 public class Note extends DataSupport {
 
+    /** 便签的ID */
     private int id;
 
+    /** 便签的年份 */
     private String year;
 
+    /** 便签的日期 */
     private String date;
 
+    /** 便签的时间 */
     private String time;
 
+    /** 便签的内容 */
     private String content;
 
-    private Boolean isRemind;
+    /** 是否设置了提醒 */
+    private boolean isRemind;
 
+    /** 设置的提醒 : 年份 */
     private int yearRemind;
 
+    /** 设置的提醒 : 月份 */
     private int monthRemind;
 
+    /** 设置的提醒 : 日期 */
     private int dayRemind;
 
+    /** 设置的提醒 : 小时 */
     private int hourRemind;
 
+    /** 设置的提醒 : 分钟 */
     private int minuteRemind;
 
+    /** 毫秒值 */
     private long timeStamp;
 
+    /** 是否为置顶便签 */
     private boolean isTop;
+
+    /** 是否为私密便签 */
+    private boolean isSecret;
+
+    public boolean isSecret() {
+        return isSecret;
+    }
+
+    public void setSecret(boolean secret) {
+        isSecret = secret;
+    }
 
     public boolean isTop() {
         return isTop;
@@ -95,11 +119,11 @@ public class Note extends DataSupport {
         this.minuteRemind = minuteRemind;
     }
 
-    public Boolean getRemind() {
+    public boolean isRemind() {
         return isRemind;
     }
 
-    public void setRemind(Boolean remind) {
+    public void setRemind(boolean remind) {
         isRemind = remind;
     }
 

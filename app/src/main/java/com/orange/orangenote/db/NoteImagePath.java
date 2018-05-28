@@ -12,10 +12,13 @@ import org.litepal.crud.DataSupport;
 
 public class NoteImagePath extends DataSupport {
 
+    /** ID */
     private int id;
 
+    /** 对应的便签ID */
     private int noteId;
 
+    /** 图片地址 */
     private String imagePath;
 
     public int getId() {

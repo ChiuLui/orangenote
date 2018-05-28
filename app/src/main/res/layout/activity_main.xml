@@ -27,11 +27,18 @@
 
         </android.support.design.widget.AppBarLayout>
 
+        <com.yalantis.phoenix.PullToRefreshView
+            android:id="@+id/pull_to_refresh"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recycler_main"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+            android:layout_height="match_parent"/>
+
+        </com.yalantis.phoenix.PullToRefreshView>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_main_add"

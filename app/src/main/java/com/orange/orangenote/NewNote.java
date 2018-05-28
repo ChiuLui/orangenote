@@ -32,6 +32,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
 import android.widget.ImageButton;
@@ -91,6 +92,9 @@ public class NewNote extends AppCompatActivity {
 
     /** 判断当前便签是否为旧标签  true:旧标签 false:新便签 */
     private boolean nowState;
+
+    /** 传过来的是否私密便签 */
+    private boolean nowIsSecret;
 
     /** 用来代替ActionBar的ToolBar */
     private Toolbar toolbar;
@@ -161,11 +165,16 @@ public class NewNote extends AppCompatActivity {
         nowContent = intent.getStringExtra("nowContent");
         nowState = intent.getBooleanExtra("nowState", false);
         isRemind = intent.getBooleanExtra("isRemind", false);
+        nowIsSecret = intent.getBooleanExtra("nowIsSecret", false);
 
         collapsingToolbarLayout = findViewById(R.id.collapsingtoolbar_newnote);
         collapsingToolbarLayout.setTitle(nowDate + " " + nowTime);
 
+
+        AlphaAnimation animation = new AlphaAnimation(0 , 1);
+        animation.setDuration(1000);
         richText = findViewById(R.id.richedit_newnote_content);
+        richText.setAnimation(animation);
         richText.setEditorHeight(450);
         richText.setEditorFontSize(16);
         richText.setEditorFontColor(Color.parseColor("#333333"));
@@ -345,11 +354,15 @@ public class NewNote extends AppCompatActivity {
             }
             //保存内容
             note.setContent(richText.getHtml());
+            //是否为置顶便签
             if (note.isTop()){
                 note.setTimeStamp(DateUtil.getTimeStamp() + MainActivity.ADDTIMESTAMP);
             } else {
                 note.setTimeStamp(DateUtil.getTimeStamp());
             }
+            //保存是否为私密便签
+            note.setSecret(nowIsSecret);
+            //----------保存到数据库
             note.save();
             nowId = note.getId();
             nowContent = note.getContent();
@@ -388,6 +401,7 @@ public class NewNote extends AppCompatActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.delete_toolbar).setVisible(true);
+        menu.findItem(R.id.secret_toolbar).setVisible(false);
         menu.findItem(R.id.view_toolbar).setVisible(false);
         menu.findItem(R.id.allcheck_toolbar).setVisible(false);
         menu.findItem(R.id.remind_toolbar).setVisible(true);

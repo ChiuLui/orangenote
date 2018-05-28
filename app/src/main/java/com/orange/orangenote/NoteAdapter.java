@@ -114,6 +114,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                         //隐藏切换布局图标  显示删除图标和置顶图标
                         MainActivity.menu.findItem(R.id.view_toolbar).setVisible(false);
                         MainActivity.menu.findItem(R.id.delete_toolbar).setVisible(true);
+                        MainActivity.menu.findItem(R.id.secret_toolbar).setVisible(true);
                         MainActivity.menu.findItem(R.id.top_toolbar).setVisible(true);
                         MainActivity.menu.findItem(R.id.allcheck_toolbar).setVisible(true);
                     }
@@ -140,7 +141,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                     String nowTime = note.getTime();
                     String nowContent = note.getContent();
                     boolean nowState = true;
-                    boolean isRemind = note.getRemind();
+                    boolean isRemind = note.isRemind();
                     intent.putExtra("nowId", nowId);
                     intent.putExtra("nowYear", nowYear);
                     intent.putExtra("nowDate", nowDate);
@@ -234,6 +235,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                                 .load(path)
                                 .centerCrop()
                                 .crossFade(500)
+                                .error(R.drawable.loadfail)
                                 .into(holder.imageView_item);
                         holder.imageView_item.setVisibility(View.VISIBLE);
                         return;

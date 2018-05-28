@@ -25,7 +25,7 @@ import java.util.List;
 
 
 /**
- * 自定义适配器
+ * 私密便签页面自定义适配器
  *
  * @author 神经大条蕾弟
  * @version 1.0
@@ -33,13 +33,13 @@ import java.util.List;
  * @copyright 赵蕾
  */
 
-class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
+class SecretAdapter extends RecyclerView.Adapter<SecretAdapter.ViewHolder> {
 
     private Context mContext;
 
     private List<Note> mNoteList;
 
-    public NoteAdapter(Context mContext, List<Note> mNoteList) {
+    public SecretAdapter(Context mContext, List<Note> mNoteList) {
         this.mContext = mContext;
         this.mNoteList = mNoteList;
     }
@@ -82,7 +82,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         }
         View view = null;
         //根据不同的视图选择不同的布局
-        if (MainActivity.isListView){
+        if (SecretActivity.isListView){
             //列表布局
             view = LayoutInflater.from(mContext).inflate(R.layout.note_item, parent, false);
         } else {
@@ -96,27 +96,27 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
             @Override
             public boolean onLongClick(View v) {
                 //不在删除模式下长按, 进入删除模式, 消耗事件
-                if (!MainActivity.isDelete) {
+                if (!SecretActivity.isDelete) {
                     int position = viewHolder.getAdapterPosition();
                     Note note = mNoteList.get(position);
-                    if (!MainActivity.isDelete) {
-                        MainActivity.deleteNote.clear();
-                        MainActivity.isDelete = true;
+                    if (!SecretActivity.isDelete) {
+                        SecretActivity.deleteNote.clear();
+                        SecretActivity.isDelete = true;
                         //判断长按的对象是否置顶了
                         if (note.isTop()) {
-                            MainActivity.isTop = true;
-                            MainActivity.menu.findItem(R.id.top_toolbar).setIcon(R.drawable.download);
+                            SecretActivity.isTop = true;
+                            SecretActivity.menu.findItem(R.id.top_toolbar).setIcon(R.drawable.download);
                         } else {
-                            MainActivity.isTop = false;
-                            MainActivity.menu.findItem(R.id.top_toolbar).setIcon(R.drawable.top);
+                            SecretActivity.isTop = false;
+                            SecretActivity.menu.findItem(R.id.top_toolbar).setIcon(R.drawable.top);
 
                         }
                         //隐藏切换布局图标  显示删除图标和置顶图标
-                        MainActivity.menu.findItem(R.id.view_toolbar).setVisible(false);
-                        MainActivity.menu.findItem(R.id.delete_toolbar).setVisible(true);
-                        MainActivity.menu.findItem(R.id.secret_toolbar).setVisible(true);
-                        MainActivity.menu.findItem(R.id.top_toolbar).setVisible(true);
-                        MainActivity.menu.findItem(R.id.allcheck_toolbar).setVisible(true);
+                        SecretActivity.menu.findItem(R.id.view_toolbar).setVisible(false);
+                        SecretActivity.menu.findItem(R.id.delete_toolbar).setVisible(true);
+                        SecretActivity.menu.findItem(R.id.secret_toolbar).setVisible(true);
+                        SecretActivity.menu.findItem(R.id.top_toolbar).setVisible(true);
+                        SecretActivity.menu.findItem(R.id.allcheck_toolbar).setVisible(true);
                     }
                     notifyDataSetChanged();
                     return true;
@@ -133,7 +133,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                 int position = viewHolder.getAdapterPosition();
                 Note note = mNoteList.get(position);
                 //不在退出模式下, 跳转到NewNote.class
-                if (!MainActivity.isDelete) {
+                if (!SecretActivity.isDelete) {
                     Intent intent = new Intent(mContext, NewNote.class);
                     int nowId = note.getId();
                     String nowYear = note.getYear();
@@ -152,14 +152,14 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
                     mContext.startActivity(intent);
                 } else {
                     //在删除模式下
-                    if (note.isTop() == MainActivity.isTop) {
+                    if (note.isTop() == SecretActivity.isTop) {
                         //点击item, 如果当前复选框被选中就显示未选中并且待删除列表中移除对象
                         if (viewHolder.checkBox_item.isChecked()) {
-                            MainActivity.deleteNote.remove(note);
+                            SecretActivity.deleteNote.remove(note);
                             viewHolder.checkBox_item.setChecked(false);
                         } else {
                             //如果当前复选框为未选中, 设置选中, 并且添加到待删除列表
-                            MainActivity.deleteNote.add(note);
+                            SecretActivity.deleteNote.add(note);
                             viewHolder.checkBox_item.setChecked(true);
                         }
                     }
@@ -176,7 +176,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         String temp = note.getContent();//得到内容
         temp = ContentUtil.getNoHtmlContent(temp);
         //根据不同的内容视图设置不同的长度的标题和内容
-        if (MainActivity.isListView) {
+        if (SecretActivity.isListView) {
             holder.textView_title.setText(ContentUtil.getTitle(temp));
             holder.textView_content.setText(ContentUtil.getContent(temp));
         } else {
@@ -193,21 +193,21 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         }
         holder.textView_itme.setText(note.getYear() + note.getDate() + "  " + note.getTime());
         //如果当前是否为删除模式, 显示或隐藏复选框
-        if (MainActivity.isDelete) {
+        if (SecretActivity.isDelete) {
             // 当前对象 的状态和 长按 的状态一样才能显示
-            if (note.isTop() == MainActivity.isTop) {
+            if (note.isTop() == SecretActivity.isTop) {
                 holder.checkBox_item.setVisibility(View.VISIBLE);
             }
         } else {
             holder.checkBox_item.setVisibility(View.GONE);
         }
         //当待删除的列表为空时, 重置checkBok, 设置所有复选框为false
-        if (MainActivity.deleteNote == null || MainActivity.deleteNote.size() <= 0) {
+        if (SecretActivity.deleteNote == null || SecretActivity.deleteNote.size() <= 0) {
             holder.checkBox_item.setChecked(false);
-            MainActivity.deleteNote.clear();
+            SecretActivity.deleteNote.clear();
         }
         //当前是否处于ListView视图, 动态改变内容显示的单行还是多行模式
-        if (MainActivity.isListView) {
+        if (SecretActivity.isListView) {
             holder.textView_content.setEllipsize(TextUtils.TruncateAt.MARQUEE);
             holder.textView_content.setSingleLine(true);
         } else {
@@ -215,12 +215,12 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
             holder.textView_content.setSingleLine(false);
         }
         //判断是全选状态还是取消全选状态.
-        if (MainActivity.isAllCheck == MainActivity.isAllCheck_CHECK) {
-            if (note.isTop() == MainActivity.isTop) {
+        if (SecretActivity.isAllCheck == SecretActivity.isAllCheck_CHECK) {
+            if (note.isTop() == SecretActivity.isTop) {
                 holder.checkBox_item.setChecked(true);
             }
-        } else if (MainActivity.isAllCheck == MainActivity.isAllCheck_UPCHECK) {
-            if (note.isTop() == MainActivity.isTop) {
+        } else if (SecretActivity.isAllCheck == SecretActivity.isAllCheck_UPCHECK) {
+            if (note.isTop() == SecretActivity.isTop) {
                 holder.checkBox_item.setChecked(false);
             }
         }
