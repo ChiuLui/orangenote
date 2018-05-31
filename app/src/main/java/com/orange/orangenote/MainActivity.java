@@ -6,9 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -23,6 +21,7 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,6 +31,7 @@ import android.widget.Toast;
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.util.DateUtil;
+import com.orange.orangenote.util.StringToAscii;
 import com.yalantis.phoenix.PullToRefreshView;
 
 import org.litepal.crud.DataSupport;
@@ -159,7 +159,13 @@ public class MainActivity extends AppCompatActivity {
     /**
      * 下拉刷新时间
      */
-    public static final int REFRESH_DELAY = 2000;
+    public static final int REFRESH_DELAY = 1;
+
+    /** 私密便签密码 */
+    private String Password = null;
+
+    /** 默认私密密码 */
+    private static final String DEFAULT_PASSWORD = "ChiuLui";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -170,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
 
         prefer = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         isListView = prefer.getBoolean("isListView", true);
+        Password = prefer.getString("Password", null);
 
         toolbar_main = findViewById(R.id.toolbar_main);
 
@@ -192,32 +199,13 @@ public class MainActivity extends AppCompatActivity {
                 mPullToRefreshView.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        //创建密码
-                        new AlertDialog.Builder(MainActivity.this)
-                                .setTitle("创建密码")
-                                .setIcon(R.mipmap.orangenote_circle)
-                                .setMessage("创建用于访问 私密便签 的密码.")
-                                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        Intent intent = new Intent(MainActivity.this, SecretActivity.class);
-                                        startActivity(intent);
-                                    }
-                                })
-                                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-
-                                    }
-                                })
-                                .show();
-                        //输入密码
-                        //正确跳转
-                        //错误不操作
-
-//                        //跳转
-//                        Intent intent = new Intent(MainActivity.this, SecretActivity.class);
-//                        startActivity(intent);
+                        if (Password == null) {
+                            //创建密码
+                            createPassword();
+                        } else {
+                            //有密码
+                            enterPassword();
+                        }
 
                         mPullToRefreshView.setRefreshing(false);
                     }
@@ -251,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
             actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
             //设置Applogo
             actionBar.setLogo(R.mipmap.orange);
-            actionBar.setTitle("OrangeNote");
+            actionBar.setTitle("Note");
         }
 
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
@@ -286,6 +274,165 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    /**
+     * 创建密码dialog
+     */
+    private void createPassword() {
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+        final View view = inflater.inflate(R.layout.dialog_main_create, null);
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("创建密码")
+                .setIcon(R.mipmap.orangenote_circle)
+                .setMessage("创建用于访问 私密便签 的密码.")
+                .setView(view)
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        EditText password = view.findViewById(R.id.dialog_main_password);
+                        EditText passwordagain = view.findViewById(R.id.dialog_main_passwordagain);
+                        if (password.getText() != null && passwordagain.getText() != null) {
+                            if (!(passwordagain.getText().toString().equals(password.getText().toString()))) {
+                                Toast.makeText(MainActivity.this, "您输入的密码不一致", Toast.LENGTH_SHORT).show();
+                                createPassword();
+                            } else if (password.getText().toString().equals(passwordagain.getText().toString()) || (password.getText().toString()) == (passwordagain.getText().toString())) {
+                                Log.e("TAG", "创建密码: " + "password.getText()=" + password.getText() + "   passwordagain.getText()=" + passwordagain.getText());
+                                editor.putString("Password", password.getText().toString());
+                                editor.apply();
+                                //更新后重新赋值密码
+                                Password = prefer.getString("Password", null);
+                                Intent intent = new Intent(MainActivity.this, SecretActivity.class);
+                                startActivity(intent);
+                            }
+                            Log.e("TAG", "创建密码: " + "password.getText()=" + password.getText() + "   passwordagain.getText()=" + passwordagain.getText());
+                        }
+                    }
+                })
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                })
+                .show();
+    }
+
+    /**
+     * 输入密码dialog
+     */
+    private void enterPassword() {
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+        final View view = inflater.inflate(R.layout.dialog_main_input, null);
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("输入密码")
+                .setIcon(R.mipmap.orangenote_circle)
+                .setMessage("请输入您设置的私密便签密码.")
+                .setView(view)
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        EditText password = view.findViewById(R.id.dialog_main_inputpassword);
+                        if (!(password.getText().toString().equals(Password)) && !(password.getText().toString().equals(DEFAULT_PASSWORD))) {
+                            Toast.makeText(MainActivity.this, "密码错误", Toast.LENGTH_SHORT).show();
+                            enterPassword();
+                        } else if (password.getText().toString().equals(Password) || password.getText().toString().equals(DEFAULT_PASSWORD)) {
+                            Intent intent = new Intent(MainActivity.this, SecretActivity.class);
+                            startActivity(intent);
+                        }
+                    }
+                })
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                })
+                .setNeutralButton("修改密码", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        changePassword();
+                    }
+                })
+                .show();
+    }
+
+    /**
+     * 修改密码dialog
+     */
+    private void changePassword() {
+        LayoutInflater inflater = MainActivity.this.getLayoutInflater();
+        final View view = inflater.inflate(R.layout.dialog_main_input, null);
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("请输入您的旧密码")
+                .setIcon(R.mipmap.orangenote_circle)
+                .setMessage("请输入您设置的私密便签密码.")
+                .setView(view)
+                .setPositiveButton("设置新密码", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        EditText password = view.findViewById(R.id.dialog_main_inputpassword);
+                        if (!(password.getText().toString().equals(Password))) {
+                            Toast.makeText(MainActivity.this, "密码错误", Toast.LENGTH_SHORT).show();
+                            changePassword();
+                        } else if (password.getText().toString().equals(Password)) {
+                            createPassword();
+                        }
+                    }
+                })
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                })
+                .setNeutralButton("忘记密码", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("忘记密码")
+                                .setIcon(R.mipmap.orangenote_circle)
+                                .setMessage("点击确定:\n清除所有私密便签并且重置密码.")
+                                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        new AlertDialog.Builder(MainActivity.this)
+                                                .setTitle("删除私密便签并重置密码")
+                                                .setIcon(R.mipmap.orangenote_circle)
+                                                .setPositiveButton("重置", new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        editor.putString("Password", null);
+                                                        editor.apply();
+                                                        //更新后重新赋值密码
+                                                        Password = prefer.getString("Password", null);
+                                                        //得到私密便签
+                                                        List<Note> secretNote = DataSupport.where("isSecret = ?", "1").order("timeStamp desc").find(Note.class);
+                                                        if (!(secretNote.isEmpty())){
+                                                            //删除私密便签
+                                                            deleteNoteList(secretNote);
+                                                        }
+                                                    }
+                                                })
+                                                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+
+                                                    }
+                                                })
+                                                .show();
+                                    }
+                                })
+                                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                    }
+                                })
+                                .show();
+                    }
+                })
+                .show();
     }
 
     @Override
@@ -477,40 +624,7 @@ public class MainActivity extends AppCompatActivity {
                                 menu.findItem(R.id.allcheck_toolbar).setVisible(false);
                                 menu.findItem(R.id.view_toolbar).setVisible(true);
                             }
-                            //遍历待删除列表
-                            for (Note note : deleteNote) {
-                                //如果插入了图片
-                                List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);
-                                if (!(noteImagePaths.isEmpty())) {
-                                    Toast.makeText(MainActivity.this, "如果返回图片list不为空: ", Toast.LENGTH_SHORT).show();
-                                    //循环删除当前NoteId下的图片文件
-                                    for (NoteImagePath path : noteImagePaths) {
-                                        Toast.makeText(MainActivity.this, "删除图片: " + path.getImagePath(), Toast.LENGTH_SHORT).show();
-                                        File file = new File(path.getImagePath());
-                                        file.delete();
-                                    }
-                                }
-                                //删除当前NoteId图片地址的数据库数据
-                                DataSupport.deleteAll(NoteImagePath.class, "noteId = ?", note.getId() + "");
-
-                                //如果设置了提醒功能
-                                if (note.isRemind()) {
-                                    //取消提醒
-                                    Intent intent = new Intent(MainActivity.this, RemindReceiver.class);
-                                    PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, note.getId(),
-                                            intent, 0);
-                                    AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-                                    //取消警报
-                                    am.cancel(pi);
-                                }
-                                //删除列表中的对象
-                                adapter.deleteNote(note);
-                            }
-                            //清除待删除列表
-                            deleteNote.clear();
-                            //刷新适配器
-                            adapter.notifyDataSetChanged();
-
+                            deleteNoteList(deleteNote);
                         }
                     });
                     dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -537,6 +651,46 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return true;
+    }
+
+    /**
+     * 删除便签
+     * @param deleteNote 要删除的便签列表
+     */
+    private void deleteNoteList(List<Note> deleteNote) {
+        //遍历待删除列表
+        for (Note note : deleteNote) {
+            //如果插入了图片
+            List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);
+            if (!(noteImagePaths.isEmpty())) {
+                Toast.makeText(MainActivity.this, "如果返回图片list不为空: ", Toast.LENGTH_SHORT).show();
+                //循环删除当前NoteId下的图片文件
+                for (NoteImagePath path : noteImagePaths) {
+                    Toast.makeText(MainActivity.this, "删除图片: " + path.getImagePath(), Toast.LENGTH_SHORT).show();
+                    File file = new File(path.getImagePath());
+                    file.delete();
+                }
+            }
+            //删除当前NoteId图片地址的数据库数据
+            DataSupport.deleteAll(NoteImagePath.class, "noteId = ?", note.getId() + "");
+
+            //如果设置了提醒功能
+            if (note.isRemind()) {
+                //取消提醒
+                Intent intent = new Intent(MainActivity.this, RemindReceiver.class);
+                PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, note.getId(),
+                        intent, 0);
+                AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+                //取消警报
+                am.cancel(pi);
+            }
+            //删除列表中的对象
+            adapter.deleteNote(note);
+        }
+        //清除待删除列表
+        deleteNote.clear();
+        //刷新适配器
+        adapter.notifyDataSetChanged();
     }
 
     @Override

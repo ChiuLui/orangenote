@@ -15,22 +15,22 @@
             android:id="@+id/secret_toolbar"
             android:icon="@drawable/password_close"
             android:title="私密"
-            app:showAsAction="ifRoom" />
+            app:showAsAction="always" />
         <item
             android:id="@+id/top_toolbar"
             android:icon="@drawable/top"
             android:title="置顶"
-            app:showAsAction="ifRoom" />
+            app:showAsAction="always" />
         <item
             android:id="@+id/delete_toolbar"
             android:icon="@drawable/delete"
             android:title="删除"
-            app:showAsAction="ifRoom" />
+            app:showAsAction="always" />
 
         <item
             android:id="@+id/allcheck_toolbar"
             android:icon="@drawable/allcheck"
             android:title="全选"
-            app:showAsAction="ifRoom" />
+            app:showAsAction="always" />
 
 </menu>
