@@ -1,7 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- ThemeLight -->
     <color name="colorPrimary">#FF9933</color>
     <color name="colorPrimaryDark">#FF9933</color>
     <color name="colorAccent">#F9d43a</color>
-    <!-- <color name="colorAccent">#FF4081</color> -->
+    <color name="color_bg_main_light">#FFFFFF</color>
+    <color name="color_bg_item_light">#FFFFFF</color>
+    <color name="color_text_title_light">#000000</color>
+    <color name="color_text_content_light">#666666</color>
+    <color name="color_text_time_light">#999999</color>
+    <color name="color_toolbar_title_light">#FFFFFF</color>
+
+    <!-- ThemeDark -->
+    <color name="colorPrimary_Dark">#3F3F3F</color>
+    <color name="colorPrimaryDark_Dark">#3F3F3F</color>
+    <color name="colorAccent_Dark">#00a392</color>
+    <color name="color_bg_main_Dark">#202020</color>
+    <color name="color_bg_item_Dark">#303030</color>
+    <color name="color_text_title_Dark">#dadada</color>
+    <color name="color_text_content_Dark">#b8b8b8</color>
+    <color name="color_text_time_Dark">#747474</color>
+    <color name="color_toolbar_title_Dark">#FFFFFF</color>
+
 </resources>

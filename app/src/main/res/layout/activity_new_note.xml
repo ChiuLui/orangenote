@@ -2,6 +2,7 @@
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:background="?attr/color_bg_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.orange.orangenote.NewNote">
@@ -76,12 +77,9 @@
                     android:id="@+id/richedit_newnote_content"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="#FFFFFF"
                     android:gravity="top"
                     android:lineSpacingExtra="5dp"
                     android:minHeight="440dp"
-                    android:textColor="#333333"
-                    android:textSize="16sp"
                     android:textStyle="normal" />
 
             </android.support.v7.widget.CardView>

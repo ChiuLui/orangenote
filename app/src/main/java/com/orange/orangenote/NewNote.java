@@ -44,6 +44,7 @@ import com.orange.orangenote.db.Note;
 import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.util.DateUtil;
 import com.orange.orangenote.util.StringToAscii;
+import com.orange.orangenote.util.ThemeChangeUtil;
 import com.orange.orangenote.util.UriToPath;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
@@ -65,6 +66,8 @@ import jp.wasabeef.richeditor.RichEditor;
 
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+
+import static com.orange.orangenote.MainActivity.isTheme_Light;
 
 
 public class NewNote extends AppCompatActivity {
@@ -148,6 +151,10 @@ public class NewNote extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+        prefer = PreferenceManager.getDefaultSharedPreferences(this);
+        isTheme_Light = prefer.getBoolean("isTheme_Light", true);
+        ThemeChangeUtil.changeTheme(this, isTheme_Light);
         setContentView(R.layout.activity_new_note);
 
         initBottonToolBar();
@@ -177,7 +184,12 @@ public class NewNote extends AppCompatActivity {
         richText.setAnimation(animation);
         richText.setEditorHeight(450);
         richText.setEditorFontSize(16);
-        richText.setEditorFontColor(Color.parseColor("#333333"));
+        if (isTheme_Light) {
+            richText.setEditorFontColor(Color.parseColor("#333333"));
+        } else {
+            richText.setEditorFontColor(Color.parseColor("#dadada"));
+            richText.setBackgroundColor(Color.parseColor("#303030"));
+        }
         richText.setPadding(10, 10, 10, 10);
         richText.setPlaceholder("随便记点什么吧...");
         richText.setHtml(nowContent);
@@ -242,10 +254,6 @@ public class NewNote extends AppCompatActivity {
 //                return false;
 //            }
 //        });
-
-        editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
-
-        prefer = PreferenceManager.getDefaultSharedPreferences(this);
 
         toolbar = findViewById(R.id.toolbar_newnote);
         //初始化工具栏
@@ -855,7 +863,7 @@ public class NewNote extends AppCompatActivity {
                 .gridExpectedSize(getResources().getDimensionPixelSize(R.dimen.grid_expected_size))//图片显示表格的大小
                 .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)//图像选择和预览活动所需的方向。
                 .thumbnailScale(0.85f)//缩放比例
-                .theme(R.style.Matisse_Zhihu)//主题  暗色主题 R.style.Matisse_Dracula
+                .theme(isTheme_Light == true? R.style.Matisse_Zhihu : R.style.Matisse_Dracula)//主题  暗色主题 R.style.Matisse_Dracula
                 .imageEngine(new GlideEngine())//加载方式
                 .forResult(REQUEST_CODE_CHOOSE);//请求码
     }

@@ -4,7 +4,7 @@
         <item
             android:id="@+id/nav_call"
             android:icon="@drawable/nav_call"
-            android:title="Call"/>
+            android:title="切换主题"/>
         <item
             android:id="@+id/nav_friends"
             android:icon="@drawable/nav_friends"

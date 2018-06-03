@@ -29,6 +29,7 @@ import android.widget.Toast;
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.util.DateUtil;
+import com.orange.orangenote.util.ThemeChangeUtil;
 import com.yalantis.phoenix.PullToRefreshView;
 
 import org.litepal.crud.DataSupport;
@@ -36,6 +37,8 @@ import org.litepal.crud.DataSupport;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.orange.orangenote.MainActivity.isTheme_Light;
 
 /**
  * 私密便签页面
@@ -103,10 +106,11 @@ public class SecretActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_secret);
         editor = PreferenceManager.getDefaultSharedPreferences(SecretActivity.this).edit();
-
         prefer = PreferenceManager.getDefaultSharedPreferences(SecretActivity.this);
+        isTheme_Light = prefer.getBoolean("isTheme_Light", true);
+        ThemeChangeUtil.changeTheme(this, isTheme_Light);
+        setContentView(R.layout.activity_secret);
         isListView = prefer.getBoolean("isListView", true);
 
         toolbar_main = findViewById(R.id.toolbar_main);
@@ -138,7 +142,7 @@ public class SecretActivity extends AppCompatActivity {
             //给按钮设置图片
             actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
             //设置Applogo
-            actionBar.setLogo(R.mipmap.orange);
+            actionBar.setLogo(R.mipmap.orange_ylo);
             actionBar.setTitle("私密便签");
         }
 
@@ -215,20 +219,22 @@ public class SecretActivity extends AppCompatActivity {
             //全选
             case R.id.allcheck_toolbar:
                 //每次点击判断是否全选
-                if (deleteNote.size() != noteList.size()){
+                if (deleteNote.size() != noteList.size()) {
                     //不是全选就选择正常状态
                     isAllCheck = isAllCheck_NORMAL;
                 }
                 //是正常状态下点击
-                if (isAllCheck == isAllCheck_NORMAL){
+                if (isAllCheck == isAllCheck_NORMAL) {
                     //全选
                     isAllCheck = isAllCheck_CHECK;
                     deleteNote.clear();
-                    for (Note note : noteList){
-                        deleteNote.add(note);
+                    for (Note note : noteList) {
+                        if (note.isTop() == isTop) {
+                            deleteNote.add(note);
+                        }
                     }
                     //在全选中状态下点击
-                } else if (isAllCheck == isAllCheck_CHECK){
+                } else if (isAllCheck == isAllCheck_CHECK) {
                     //取消全选
                     isAllCheck = isAllCheck_UPCHECK;
                     deleteNote.clear();
@@ -241,39 +247,16 @@ public class SecretActivity extends AppCompatActivity {
                 Toast.makeText(this, "设为私密", Toast.LENGTH_SHORT).show();
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
-                    //点击
-                    if (isDelete) {
-                        //把退出删除模式
-                        isDelete = false;
-                        isAllCheck = isAllCheck_NORMAL;
-                        menu.findItem(R.id.secret_toolbar).setVisible(false);
-                        menu.findItem(R.id.delete_toolbar).setVisible(false);
-                        menu.findItem(R.id.top_toolbar).setVisible(false);
-                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                        menu.findItem(R.id.view_toolbar).setVisible(true);
-                    }
-                    //遍历待删除列表 设为私密便签
+                    //遍历待删除列表 取消私密便签
                     for (Note note : deleteNote) {
-                            note.setSecret(false);
-                            note.save();
+                        note.setSecret(false);
+                        note.save();
                     }
-                    //清除待删除列表
-                    deleteNote.clear();
-                    //刷新适配器
-                    recordAdapter();
+                    //退出删除模式
+                    exitDeleteMode();
                 } else {
                     //不满足条件的话, 只退出删除模式, 刷新视图
-                    if (isDelete) {
-                        isDelete = false;
-                        deleteNote.clear();
-                        isAllCheck = isAllCheck_NORMAL;
-                        menu.findItem(R.id.secret_toolbar).setVisible(false);
-                        menu.findItem(R.id.delete_toolbar).setVisible(false);
-                        menu.findItem(R.id.top_toolbar).setVisible(false);
-                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                        menu.findItem(R.id.view_toolbar).setVisible(true);
-                    }
-                    adapter.notifyDataSetChanged();
+                    exitDeleteMode();
                 }
                 break;
             //置顶
@@ -281,17 +264,6 @@ public class SecretActivity extends AppCompatActivity {
                 Toast.makeText(this, "点击置顶按钮", Toast.LENGTH_SHORT).show();
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
-                    //点击
-                    if (isDelete) {
-                        //把退出删除模式
-                        isDelete = false;
-                        isAllCheck = isAllCheck_NORMAL;
-                        menu.findItem(R.id.secret_toolbar).setVisible(false);
-                        menu.findItem(R.id.delete_toolbar).setVisible(false);
-                        menu.findItem(R.id.top_toolbar).setVisible(false);
-                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                        menu.findItem(R.id.view_toolbar).setVisible(true);
-                    }
                     //遍历待删除列表 增加毫秒值
                     for (Note note : deleteNote) {
                         if (note.isTop() && isTop) {
@@ -299,30 +271,18 @@ public class SecretActivity extends AppCompatActivity {
                             Log.e("TAG", "原本毫秒值" + note.getTimeStamp());
                             note.setTimeStamp(note.getTimeStamp() - ADDTIMESTAMP);
                             note.save();
-                        } else if (!(note.isTop()) && !(isTop)){
+                        } else if (!(note.isTop()) && !(isTop)) {
                             note.setTop(true);
                             Log.e("TAG", "原本毫秒值" + note.getTimeStamp());
                             note.setTimeStamp(note.getTimeStamp() + ADDTIMESTAMP);
                             note.save();
                         }
                     }
-                    //清除待删除列表
-                    deleteNote.clear();
-                    //刷新适配器
-                    recordAdapter();
+                    //退出删除模式
+                    exitDeleteMode();
                 } else {
                     //不满足条件的话, 只退出删除模式, 刷新视图
-                    if (isDelete) {
-                        isDelete = false;
-                        deleteNote.clear();
-                        isAllCheck = isAllCheck_NORMAL;
-                        menu.findItem(R.id.secret_toolbar).setVisible(false);
-                        menu.findItem(R.id.delete_toolbar).setVisible(false);
-                        menu.findItem(R.id.top_toolbar).setVisible(false);
-                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                        menu.findItem(R.id.view_toolbar).setVisible(true);
-                    }
-                    adapter.notifyDataSetChanged();
+                    exitDeleteMode();
                 }
                 break;
             //删除
@@ -337,51 +297,8 @@ public class SecretActivity extends AppCompatActivity {
                     dialog.setPositiveButton("确认", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            //点击确定
-                            if (isDelete) {
-                                //把退出删除模式
-                                isDelete = false;
-                                isAllCheck = isAllCheck_NORMAL;
-                                menu.findItem(R.id.secret_toolbar).setVisible(false);
-                                menu.findItem(R.id.delete_toolbar).setVisible(false);
-                                menu.findItem(R.id.top_toolbar).setVisible(false);
-                                menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                                menu.findItem(R.id.view_toolbar).setVisible(true);
-                            }
-                            //遍历待删除列表
-                            for (Note note : deleteNote) {
-                                //如果插入了图片
-                                List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);
-                                if (!(noteImagePaths.isEmpty())) {
-                                    Toast.makeText(SecretActivity.this, "如果返回图片list不为空: ", Toast.LENGTH_SHORT).show();
-                                    //循环删除当前NoteId下的图片文件
-                                    for (NoteImagePath path : noteImagePaths) {
-                                        Toast.makeText(SecretActivity.this, "删除图片: " + path.getImagePath(), Toast.LENGTH_SHORT).show();
-                                        File file = new File(path.getImagePath());
-                                        file.delete();
-                                    }
-                                }
-                                //删除当前NoteId图片地址的数据库数据
-                                DataSupport.deleteAll(NoteImagePath.class, "noteId = ?" , note.getId()+"");
-
-                                //如果设置了提醒功能
-                                if (note.isRemind()) {
-                                    //取消提醒
-                                    Intent intent = new Intent(SecretActivity.this, RemindReceiver.class);
-                                    PendingIntent pi = PendingIntent.getBroadcast(SecretActivity.this, note.getId(),
-                                            intent, 0);
-                                    AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-                                    //取消警报
-                                    am.cancel(pi);
-                                }
-                                //删除列表中的对象
-                                adapter.deleteNote(note);
-                            }
-                            //清除待删除列表
-                            deleteNote.clear();
-                            //刷新适配器
-                            adapter.notifyDataSetChanged();
-
+//                            //点击确定
+                            deleteNoteList(deleteNote);
                         }
                     });
                     dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -393,22 +310,51 @@ public class SecretActivity extends AppCompatActivity {
                     dialog.show();
                 } else {
                     //不满足条件的话, 只退出删除模式, 刷新视图
-                    if (isDelete) {
-                        isDelete = false;
-                        deleteNote.clear();
-                        isAllCheck = isAllCheck_NORMAL;
-                        menu.findItem(R.id.secret_toolbar).setVisible(false);
-                        menu.findItem(R.id.delete_toolbar).setVisible(false);
-                        menu.findItem(R.id.top_toolbar).setVisible(false);
-                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                        menu.findItem(R.id.view_toolbar).setVisible(true);
-                    }
-                    adapter.notifyDataSetChanged();
+                    exitDeleteMode();
                 }
                 break;
         }
         return true;
     }
+
+    /**
+     * 删除便签
+     *
+     * @param deleteNote 要删除的便签列表
+     */
+    private void deleteNoteList(List<Note> deleteNote) {
+        //遍历待删除列表
+        for (Note note : deleteNote) {
+            //如果插入了图片
+            List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);
+            if (!(noteImagePaths.isEmpty())) {
+                Toast.makeText(SecretActivity.this, "如果返回图片list不为空: ", Toast.LENGTH_SHORT).show();
+                //循环删除当前NoteId下的图片文件
+                for (NoteImagePath path : noteImagePaths) {
+                    Toast.makeText(SecretActivity.this, "删除图片: " + path.getImagePath(), Toast.LENGTH_SHORT).show();
+                    File file = new File(path.getImagePath());
+                    file.delete();
+                }
+            }
+            //删除当前NoteId图片地址的数据库数据
+            DataSupport.deleteAll(NoteImagePath.class, "noteId = ?", note.getId() + "");
+
+            //如果设置了提醒功能
+            if (note.isRemind()) {
+                //取消提醒
+                Intent intent = new Intent(SecretActivity.this, RemindReceiver.class);
+                PendingIntent pi = PendingIntent.getBroadcast(SecretActivity.this, note.getId(),
+                        intent, 0);
+                AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+                //取消警报
+                am.cancel(pi);
+            }
+            //删除列表中的对象
+            adapter.deleteNote(note);
+        }
+        exitDeleteMode();
+    }
+
 
     @Override
     protected void onResume() {
@@ -459,20 +405,29 @@ public class SecretActivity extends AppCompatActivity {
             case KeyEvent.KEYCODE_BACK:
                 //当处于删除模式, 消费回退键, 退出删除模式
                 if (isDelete) {
-                    isDelete = false;
-                    isAllCheck = isAllCheck_NORMAL;
-                    menu.findItem(R.id.secret_toolbar).setVisible(false);
-                    menu.findItem(R.id.delete_toolbar).setVisible(false);
-                    menu.findItem(R.id.top_toolbar).setVisible(false);
-                    menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                    menu.findItem(R.id.view_toolbar).setVisible(true);
-                    deleteNote.clear();//清除待删除列表
-                    adapter.notifyDataSetChanged();
+                    exitDeleteMode();
                     return false;
                 }
                 break;
         }
         return true;
+    }
+
+    /**
+     * 退出删除模式 并且 清空待删除数组
+     */
+    private void exitDeleteMode() {
+        if (isDelete) {
+            isDelete = false;
+            deleteNote.clear();
+            isAllCheck = isAllCheck_NORMAL;
+            menu.findItem(R.id.secret_toolbar).setVisible(false);
+            menu.findItem(R.id.delete_toolbar).setVisible(false);
+            menu.findItem(R.id.top_toolbar).setVisible(false);
+            menu.findItem(R.id.allcheck_toolbar).setVisible(false);
+            menu.findItem(R.id.view_toolbar).setVisible(true);
+            recordAdapter();
+        }
     }
 
     @Override

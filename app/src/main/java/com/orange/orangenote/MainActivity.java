@@ -5,10 +5,12 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.v4.media.RatingCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -20,23 +22,27 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.util.DateUtil;
 import com.orange.orangenote.util.StringToAscii;
+import com.orange.orangenote.util.ThemeChangeUtil;
 import com.yalantis.phoenix.PullToRefreshView;
 
 import org.litepal.crud.DataSupport;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,6 +110,11 @@ public class MainActivity extends AppCompatActivity {
     public static boolean isListView = true;
 
     /**
+     * 当前是否为Light主题 true:当前是Light主题  false:当前是Dark主题
+     */
+    public static boolean isTheme_Light = true;
+
+    /**
      * SP存储对象
      */
     private SharedPreferences.Editor editor;
@@ -161,20 +172,25 @@ public class MainActivity extends AppCompatActivity {
      */
     public static final int REFRESH_DELAY = 1;
 
-    /** 私密便签密码 */
+    /**
+     * 私密便签密码
+     */
     private String Password = null;
 
-    /** 默认私密密码 */
+    /**
+     * 默认私密密码
+     */
     private static final String DEFAULT_PASSWORD = "ChiuLui";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        prefer = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        editor = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).edit();
+        isTheme_Light = prefer.getBoolean("isTheme_Light", true);
+        ThemeChangeUtil.changeTheme(this, isTheme_Light);
         setContentView(R.layout.activity_main);
 
-        editor = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).edit();
-
-        prefer = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         isListView = prefer.getBoolean("isListView", true);
         Password = prefer.getString("Password", null);
 
@@ -189,6 +205,21 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recycler_main);
 
         mPullToRefreshView = findViewById(R.id.pull_to_refresh);
+
+
+        //设置toolbar和Actionbar一样效果
+        setSupportActionBar(toolbar_main);
+        //得到ActionBar的实例
+        actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            //设置系统最左边的HomeASUp按钮
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            //给按钮设置图片
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
+            //设置Applogo
+            actionBar.setLogo(isTheme_Light == true ? R.mipmap.orange_ylo : R.mipmap.orange_ylo);
+            actionBar.setTitle("Note");
+        }
 
         /**
          * 下拉刷新回调
@@ -228,20 +259,6 @@ public class MainActivity extends AppCompatActivity {
 
         deleteNote = new ArrayList<>();
 
-        //设置toolbar和Actionbar一样效果
-        setSupportActionBar(toolbar_main);
-        //得到ActionBar的实例
-        actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            //设置系统最左边的HomeASUp按钮
-            actionBar.setDisplayHomeAsUpEnabled(true);
-            //给按钮设置图片
-            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
-            //设置Applogo
-            actionBar.setLogo(R.mipmap.orange);
-            actionBar.setTitle("Note");
-        }
-
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -268,6 +285,19 @@ public class MainActivity extends AppCompatActivity {
                 switch (item.getItemId()) {
                     case R.id.nav_call:
                         drawerLayout_main.closeDrawers();
+
+                        isTheme_Light = prefer.getBoolean("isTheme_Light", true);
+                        if (isTheme_Light) {
+                            setTheme(R.style.ThemeDark);
+                            isTheme_Light = false;
+                        } else {
+                            setTheme(R.style.ThemeLight);
+                            isTheme_Light = true;
+                        }
+                        editor.putBoolean("isTheme_Light", isTheme_Light);
+                        editor.apply();
+                        MainActivity.this.recreate();
+
                         break;
                 }
                 return true;
@@ -276,46 +306,95 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+//    @Override
+//    public void onBackPressed() {
+//        super.onBackPressed();
+//        Intent mIntent = new Intent(this, MainActivity.class);
+//        mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//        startActivity(mIntent);
+//        finish();
+//    }
+
     /**
      * 创建密码dialog
      */
     private void createPassword() {
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
         final View view = inflater.inflate(R.layout.dialog_main_create, null);
-        new AlertDialog.Builder(MainActivity.this)
-                .setTitle("创建密码")
-                .setIcon(R.mipmap.orangenote_circle)
-                .setMessage("创建用于访问 私密便签 的密码.")
-                .setView(view)
-                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        EditText password = view.findViewById(R.id.dialog_main_password);
-                        EditText passwordagain = view.findViewById(R.id.dialog_main_passwordagain);
-                        if (password.getText() != null && passwordagain.getText() != null) {
-                            if (!(passwordagain.getText().toString().equals(password.getText().toString()))) {
-                                Toast.makeText(MainActivity.this, "您输入的密码不一致", Toast.LENGTH_SHORT).show();
-                                createPassword();
-                            } else if (password.getText().toString().equals(passwordagain.getText().toString()) || (password.getText().toString()) == (passwordagain.getText().toString())) {
+        AlertDialog dialog;
+        if (isTheme_Light) {
+            dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Light)
+                    .setTitle("创建密码")
+                    .setIcon(R.mipmap.orangenote_circle)
+                    .setMessage("创建用于访问 私密便签 的密码.")
+                    .setView(view)
+                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            EditText password = view.findViewById(R.id.dialog_main_password);
+                            EditText passwordagain = view.findViewById(R.id.dialog_main_passwordagain);
+                            if (password.getText() != null && passwordagain.getText() != null) {
+                                if (!(passwordagain.getText().toString().equals(password.getText().toString()))) {
+                                    Toast.makeText(MainActivity.this, "您输入的密码不一致", Toast.LENGTH_SHORT).show();
+                                    createPassword();
+                                } else if (password.getText().toString().equals(passwordagain.getText().toString()) || (password.getText().toString()) == (passwordagain.getText().toString())) {
+                                    Log.e("TAG", "创建密码: " + "password.getText()=" + password.getText() + "   passwordagain.getText()=" + passwordagain.getText());
+                                    editor.putString("Password", password.getText().toString());
+                                    editor.apply();
+                                    //更新后重新赋值密码
+                                    Password = prefer.getString("Password", null);
+                                    Intent intent = new Intent(MainActivity.this, SecretActivity.class);
+                                    startActivity(intent);
+                                }
                                 Log.e("TAG", "创建密码: " + "password.getText()=" + password.getText() + "   passwordagain.getText()=" + passwordagain.getText());
-                                editor.putString("Password", password.getText().toString());
-                                editor.apply();
-                                //更新后重新赋值密码
-                                Password = prefer.getString("Password", null);
-                                Intent intent = new Intent(MainActivity.this, SecretActivity.class);
-                                startActivity(intent);
                             }
-                            Log.e("TAG", "创建密码: " + "password.getText()=" + password.getText() + "   passwordagain.getText()=" + passwordagain.getText());
                         }
-                    }
-                })
-                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                    })
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
 
-                    }
-                })
-                .show();
+                        }
+                    })
+                    .show();
+            changeDialogButtonColor(dialog);
+        } else {
+            dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Dark)
+                    .setTitle("创建密码")
+                    .setIcon(R.mipmap.orangenote_circle)
+                    .setMessage("创建用于访问 私密便签 的密码.")
+                    .setView(view)
+                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            EditText password = view.findViewById(R.id.dialog_main_password);
+                            EditText passwordagain = view.findViewById(R.id.dialog_main_passwordagain);
+                            if (password.getText() != null && passwordagain.getText() != null) {
+                                if (!(passwordagain.getText().toString().equals(password.getText().toString()))) {
+                                    Toast.makeText(MainActivity.this, "您输入的密码不一致", Toast.LENGTH_SHORT).show();
+                                    createPassword();
+                                } else if (password.getText().toString().equals(passwordagain.getText().toString()) || (password.getText().toString()) == (passwordagain.getText().toString())) {
+                                    Log.e("TAG", "创建密码: " + "password.getText()=" + password.getText() + "   passwordagain.getText()=" + passwordagain.getText());
+                                    editor.putString("Password", password.getText().toString());
+                                    editor.apply();
+                                    //更新后重新赋值密码
+                                    Password = prefer.getString("Password", null);
+                                    Intent intent = new Intent(MainActivity.this, SecretActivity.class);
+                                    startActivity(intent);
+                                }
+                                Log.e("TAG", "创建密码: " + "password.getText()=" + password.getText() + "   passwordagain.getText()=" + passwordagain.getText());
+                            }
+                        }
+                    })
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    })
+                    .show();
+            changeDialogColor(dialog);
+        }
     }
 
     /**
@@ -324,37 +403,75 @@ public class MainActivity extends AppCompatActivity {
     private void enterPassword() {
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
         final View view = inflater.inflate(R.layout.dialog_main_input, null);
-        new AlertDialog.Builder(MainActivity.this)
-                .setTitle("输入密码")
-                .setIcon(R.mipmap.orangenote_circle)
-                .setMessage("请输入您设置的私密便签密码.")
-                .setView(view)
-                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        EditText password = view.findViewById(R.id.dialog_main_inputpassword);
-                        if (!(password.getText().toString().equals(Password)) && !(password.getText().toString().equals(DEFAULT_PASSWORD))) {
-                            Toast.makeText(MainActivity.this, "密码错误", Toast.LENGTH_SHORT).show();
-                            enterPassword();
-                        } else if (password.getText().toString().equals(Password) || password.getText().toString().equals(DEFAULT_PASSWORD)) {
-                            Intent intent = new Intent(MainActivity.this, SecretActivity.class);
-                            startActivity(intent);
+        AlertDialog dialog;
+        if (isTheme_Light) {
+            dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Light)
+                    .setTitle("输入密码")
+                    .setIcon(R.mipmap.orangenote_circle)
+                    .setMessage("请输入您设置的私密便签密码.")
+                    .setView(view)
+                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            EditText password = view.findViewById(R.id.dialog_main_inputpassword);
+                            if (!(password.getText().toString().equals(Password)) && !(password.getText().toString().equals(DEFAULT_PASSWORD))) {
+                                Toast.makeText(MainActivity.this, "密码错误", Toast.LENGTH_SHORT).show();
+                                enterPassword();
+                            } else if (password.getText().toString().equals(Password) || password.getText().toString().equals(DEFAULT_PASSWORD)) {
+                                Intent intent = new Intent(MainActivity.this, SecretActivity.class);
+                                startActivity(intent);
+                            }
                         }
-                    }
-                })
-                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                    })
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
 
-                    }
-                })
-                .setNeutralButton("修改密码", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        changePassword();
-                    }
-                })
-                .show();
+                        }
+                    })
+                    .setNeutralButton("修改密码", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            changePassword();
+                        }
+                    })
+                    .show();
+            changeDialogButtonColor(dialog);
+        } else {
+            dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Dark)
+                    .setTitle("输入密码")
+                    .setIcon(R.mipmap.orangenote_circle)
+                    .setMessage("请输入您设置的私密便签密码.")
+                    .setView(view)
+                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            EditText password = view.findViewById(R.id.dialog_main_inputpassword);
+                            if (!(password.getText().toString().equals(Password)) && !(password.getText().toString().equals(DEFAULT_PASSWORD))) {
+                                Toast.makeText(MainActivity.this, "密码错误", Toast.LENGTH_SHORT).show();
+                                enterPassword();
+                            } else if (password.getText().toString().equals(Password) || password.getText().toString().equals(DEFAULT_PASSWORD)) {
+                                Intent intent = new Intent(MainActivity.this, SecretActivity.class);
+                                startActivity(intent);
+                            }
+                        }
+                    })
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    })
+                    .setNeutralButton("修改密码", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            changePassword();
+                        }
+                    })
+                    .show();
+            changeDialogColor(dialog);
+        }
+
     }
 
     /**
@@ -363,76 +480,196 @@ public class MainActivity extends AppCompatActivity {
     private void changePassword() {
         LayoutInflater inflater = MainActivity.this.getLayoutInflater();
         final View view = inflater.inflate(R.layout.dialog_main_input, null);
-        new AlertDialog.Builder(MainActivity.this)
-                .setTitle("请输入您的旧密码")
-                .setIcon(R.mipmap.orangenote_circle)
-                .setMessage("请输入您设置的私密便签密码.")
-                .setView(view)
-                .setPositiveButton("设置新密码", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        EditText password = view.findViewById(R.id.dialog_main_inputpassword);
-                        if (!(password.getText().toString().equals(Password))) {
-                            Toast.makeText(MainActivity.this, "密码错误", Toast.LENGTH_SHORT).show();
-                            changePassword();
-                        } else if (password.getText().toString().equals(Password)) {
-                            createPassword();
+        final AlertDialog dialog;
+        final AlertDialog[] dialogdelete = new AlertDialog[1];
+        final AlertDialog[] dialogdelete2 = new AlertDialog[1];
+        if (isTheme_Light) {
+            dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Light)
+                    .setTitle("请输入您的旧密码")
+                    .setIcon(R.mipmap.orangenote_circle)
+                    .setMessage("请输入您设置的私密便签密码.")
+                    .setView(view)
+                    .setPositiveButton("设置新密码", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            EditText password = view.findViewById(R.id.dialog_main_inputpassword);
+                            if (!(password.getText().toString().equals(Password))) {
+                                Toast.makeText(MainActivity.this, "密码错误", Toast.LENGTH_SHORT).show();
+                                changePassword();
+                            } else if (password.getText().toString().equals(Password)) {
+                                createPassword();
+                            }
                         }
-                    }
-                })
-                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                    })
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
 
-                    }
-                })
-                .setNeutralButton("忘记密码", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        new AlertDialog.Builder(MainActivity.this)
-                                .setTitle("忘记密码")
-                                .setIcon(R.mipmap.orangenote_circle)
-                                .setMessage("点击确定:\n清除所有私密便签并且重置密码.")
-                                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        new AlertDialog.Builder(MainActivity.this)
-                                                .setTitle("删除私密便签并重置密码")
-                                                .setIcon(R.mipmap.orangenote_circle)
-                                                .setPositiveButton("重置", new DialogInterface.OnClickListener() {
-                                                    @Override
-                                                    public void onClick(DialogInterface dialog, int which) {
-                                                        editor.putString("Password", null);
-                                                        editor.apply();
-                                                        //更新后重新赋值密码
-                                                        Password = prefer.getString("Password", null);
-                                                        //得到私密便签
-                                                        List<Note> secretNote = DataSupport.where("isSecret = ?", "1").order("timeStamp desc").find(Note.class);
-                                                        if (!(secretNote.isEmpty())){
-                                                            //删除私密便签
-                                                            deleteNoteList(secretNote);
+                        }
+                    })
+                    .setNeutralButton("忘记密码", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                            dialogdelete[0] = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Light)
+                                    .setTitle("忘记密码")
+                                    .setIcon(R.mipmap.orangenote_circle)
+                                    .setMessage("点击确定:\n清除所有私密便签并且重置密码.")
+                                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialogdelete2[0] = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Light)
+                                                    .setTitle("删除私密便签并重置密码")
+                                                    .setIcon(R.mipmap.orangenote_circle)
+                                                    .setPositiveButton("重置", new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialog, int which) {
+                                                            editor.putString("Password", null);
+                                                            editor.apply();
+                                                            //更新后重新赋值密码
+                                                            Password = prefer.getString("Password", null);
+                                                            //得到私密便签
+                                                            List<Note> secretNote = DataSupport.where("isSecret = ?", "1").order("timeStamp desc").find(Note.class);
+                                                            if (!(secretNote.isEmpty())) {
+                                                                //删除私密便签
+                                                                deleteNoteList(secretNote);
+                                                            }
                                                         }
-                                                    }
-                                                })
-                                                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                                                    @Override
-                                                    public void onClick(DialogInterface dialog, int which) {
+                                                    })
+                                                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialog, int which) {
 
-                                                    }
-                                                })
-                                                .show();
-                                    }
-                                })
-                                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
+                                                        }
+                                                    })
+                                                    .show();
+                                            changeDialogButtonColor(dialogdelete2[0]);
+                                        }
+                                    })
+                                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
 
-                                    }
-                                })
-                                .show();
-                    }
-                })
-                .show();
+                                        }
+                                    })
+                                    .show();
+                            changeDialogButtonColor(dialogdelete[0]);
+                        }
+                    })
+                    .show();
+            changeDialogButtonColor(dialog);
+        } else {
+            dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Dark)
+                    .setTitle("请输入您的旧密码")
+                    .setIcon(R.mipmap.orangenote_circle)
+                    .setMessage("请输入您设置的私密便签密码.")
+                    .setView(view)
+                    .setPositiveButton("设置新密码", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            EditText password = view.findViewById(R.id.dialog_main_inputpassword);
+                            if (!(password.getText().toString().equals(Password))) {
+                                Toast.makeText(MainActivity.this, "密码错误", Toast.LENGTH_SHORT).show();
+                                changePassword();
+                            } else if (password.getText().toString().equals(Password)) {
+                                createPassword();
+                            }
+                        }
+                    })
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    })
+                    .setNeutralButton("忘记密码", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialogdelete[0] = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Dark)
+                                    .setTitle("忘记密码")
+                                    .setIcon(R.mipmap.orangenote_circle)
+                                    .setMessage("点击确定:\n清除所有私密便签并且重置密码.")
+                                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialogdelete2[0] = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Dark)
+                                                    .setTitle("删除私密便签并重置密码")
+                                                    .setIcon(R.mipmap.orangenote_circle)
+                                                    .setPositiveButton("重置", new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialog, int which) {
+                                                            editor.putString("Password", null);
+                                                            editor.apply();
+                                                            //更新后重新赋值密码
+                                                            Password = prefer.getString("Password", null);
+                                                            //得到私密便签
+                                                            List<Note> secretNote = DataSupport.where("isSecret = ?", "1").order("timeStamp desc").find(Note.class);
+                                                            if (!(secretNote.isEmpty())) {
+                                                                //删除私密便签
+                                                                deleteNoteList(secretNote);
+                                                            }
+                                                        }
+                                                    })
+                                                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialog, int which) {
+
+                                                        }
+                                                    })
+                                                    .show();
+                                            changeDialogColor(dialogdelete2[0]);
+                                        }
+                                    })
+                                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+
+                                        }
+                                    })
+                                    .show();
+                            changeDialogColor(dialogdelete[0]);
+                        }
+                    })
+                    .show();
+            changeDialogColor(dialog);
+        }
+    }
+
+    /**
+     * 利用反射改变dialog按钮的颜色
+     *
+     * @param dialog
+     */
+    private void changeDialogButtonColor(AlertDialog dialog) {
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.parseColor("#F9d43a"));
+        dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(Color.parseColor("#F9d43a"));
+        dialog.getButton(DialogInterface.BUTTON_NEUTRAL).setTextColor(Color.parseColor("#F9d43a"));
+    }
+
+    /**
+     * 利用反射改变dialog的标题和内容颜色
+     *
+     * @param dialog
+     */
+    private void changeDialogColor(DialogInterface dialog) {
+        try {
+            Field mAlert = AlertDialog.class.getDeclaredField("mAlert");
+            mAlert.setAccessible(true);
+            Object mAlertController = mAlert.get(dialog);
+            Field mMessage = mAlertController.getClass().getDeclaredField("mMessageView");
+            mMessage.setAccessible(true);
+            TextView mMessageView = (TextView) mMessage.get(mAlertController);
+            mMessageView.setTextColor(MainActivity.this.getResources().getColor(R.color.color_text_title_Dark));
+
+            Field mTitle = mAlertController.getClass().getDeclaredField("mTitleView");
+            mTitle.setAccessible(true);
+            TextView mTitleView = (TextView) mTitle.get(mAlertController);
+            mTitleView.setTextColor(MainActivity.this.getResources().getColor(R.color.color_text_title_Dark));
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -501,7 +738,9 @@ public class MainActivity extends AppCompatActivity {
                     isAllCheck = isAllCheck_CHECK;
                     deleteNote.clear();
                     for (Note note : noteList) {
-                        deleteNote.add(note);
+                        if (note.isTop() == isTop) {
+                            deleteNote.add(note);
+                        }
                     }
                     //在全选中状态下点击
                 } else if (isAllCheck == isAllCheck_CHECK) {
@@ -517,39 +756,16 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "设为私密", Toast.LENGTH_SHORT).show();
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
-                    //点击
-                    if (isDelete) {
-                        //把退出删除模式
-                        isDelete = false;
-                        isAllCheck = isAllCheck_NORMAL;
-                        menu.findItem(R.id.secret_toolbar).setVisible(false);
-                        menu.findItem(R.id.delete_toolbar).setVisible(false);
-                        menu.findItem(R.id.top_toolbar).setVisible(false);
-                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                        menu.findItem(R.id.view_toolbar).setVisible(true);
-                    }
                     //遍历待删除列表 设为私密便签
                     for (Note note : deleteNote) {
                         note.setSecret(true);
                         note.save();
                     }
-                    //清除待删除列表
-                    deleteNote.clear();
-                    //刷新适配器
-                    recordAdapter();
+                    //退出删除模式
+                    exitDeleteMode();
                 } else {
                     //不满足条件的话, 只退出删除模式, 刷新视图
-                    if (isDelete) {
-                        isDelete = false;
-                        deleteNote.clear();
-                        isAllCheck = isAllCheck_NORMAL;
-                        menu.findItem(R.id.secret_toolbar).setVisible(false);
-                        menu.findItem(R.id.delete_toolbar).setVisible(false);
-                        menu.findItem(R.id.top_toolbar).setVisible(false);
-                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                        menu.findItem(R.id.view_toolbar).setVisible(true);
-                    }
-                    adapter.notifyDataSetChanged();
+                    exitDeleteMode();
                 }
                 break;
             //置顶
@@ -557,17 +773,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "点击置顶按钮", Toast.LENGTH_SHORT).show();
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
-                    //点击
-                    if (isDelete) {
-                        //把退出删除模式
-                        isDelete = false;
-                        isAllCheck = isAllCheck_NORMAL;
-                        menu.findItem(R.id.secret_toolbar).setVisible(false);
-                        menu.findItem(R.id.delete_toolbar).setVisible(false);
-                        menu.findItem(R.id.top_toolbar).setVisible(false);
-                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                        menu.findItem(R.id.view_toolbar).setVisible(true);
-                    }
                     //遍历待删除列表 增加毫秒值
                     for (Note note : deleteNote) {
                         if (note.isTop() && isTop) {
@@ -582,23 +787,11 @@ public class MainActivity extends AppCompatActivity {
                             note.save();
                         }
                     }
-                    //清除待删除列表
-                    deleteNote.clear();
-                    //刷新适配器
-                    recordAdapter();
+                    //退出删除模式
+                    exitDeleteMode();
                 } else {
                     //不满足条件的话, 只退出删除模式, 刷新视图
-                    if (isDelete) {
-                        isDelete = false;
-                        deleteNote.clear();
-                        isAllCheck = isAllCheck_NORMAL;
-                        menu.findItem(R.id.secret_toolbar).setVisible(false);
-                        menu.findItem(R.id.delete_toolbar).setVisible(false);
-                        menu.findItem(R.id.top_toolbar).setVisible(false);
-                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                        menu.findItem(R.id.view_toolbar).setVisible(true);
-                    }
-                    adapter.notifyDataSetChanged();
+                    exitDeleteMode();
                 }
                 break;
             //删除
@@ -613,17 +806,7 @@ public class MainActivity extends AppCompatActivity {
                     dialog.setPositiveButton("确认", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            //点击确定
-                            if (isDelete) {
-                                //把退出删除模式
-                                isDelete = false;
-                                isAllCheck = isAllCheck_NORMAL;
-                                menu.findItem(R.id.secret_toolbar).setVisible(false);
-                                menu.findItem(R.id.delete_toolbar).setVisible(false);
-                                menu.findItem(R.id.top_toolbar).setVisible(false);
-                                menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                                menu.findItem(R.id.view_toolbar).setVisible(true);
-                            }
+//                            //点击确定
                             deleteNoteList(deleteNote);
                         }
                     });
@@ -636,17 +819,7 @@ public class MainActivity extends AppCompatActivity {
                     dialog.show();
                 } else {
                     //不满足条件的话, 只退出删除模式, 刷新视图
-                    if (isDelete) {
-                        isDelete = false;
-                        deleteNote.clear();
-                        isAllCheck = isAllCheck_NORMAL;
-                        menu.findItem(R.id.secret_toolbar).setVisible(false);
-                        menu.findItem(R.id.delete_toolbar).setVisible(false);
-                        menu.findItem(R.id.top_toolbar).setVisible(false);
-                        menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                        menu.findItem(R.id.view_toolbar).setVisible(true);
-                    }
-                    adapter.notifyDataSetChanged();
+                    exitDeleteMode();
                 }
                 break;
         }
@@ -655,6 +828,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * 删除便签
+     *
      * @param deleteNote 要删除的便签列表
      */
     private void deleteNoteList(List<Note> deleteNote) {
@@ -687,10 +861,7 @@ public class MainActivity extends AppCompatActivity {
             //删除列表中的对象
             adapter.deleteNote(note);
         }
-        //清除待删除列表
-        deleteNote.clear();
-        //刷新适配器
-        adapter.notifyDataSetChanged();
+        exitDeleteMode();
     }
 
     @Override
@@ -704,7 +875,6 @@ public class MainActivity extends AppCompatActivity {
      */
     private void recordAdapter() {
 
-//        noteList = DataSupport.findAll(Note.class);
         //查询倒序
         noteList = DataSupport.where("isSecret = ?", "0").order("timeStamp desc").find(Note.class);
         adapter = new NoteAdapter(MainActivity.this, this.noteList);
@@ -733,37 +903,43 @@ public class MainActivity extends AppCompatActivity {
             case KeyEvent.KEYCODE_BACK:
                 //当处于删除模式, 消费回退键, 退出删除模式
                 if (isDelete) {
-                    isDelete = false;
-                    isAllCheck = isAllCheck_NORMAL;
-                    menu.findItem(R.id.secret_toolbar).setVisible(false);
-                    menu.findItem(R.id.delete_toolbar).setVisible(false);
-                    menu.findItem(R.id.top_toolbar).setVisible(false);
-                    menu.findItem(R.id.allcheck_toolbar).setVisible(false);
-                    menu.findItem(R.id.view_toolbar).setVisible(true);
-                    deleteNote.clear();//清除待删除列表
-                    adapter.notifyDataSetChanged();
+                    exitDeleteMode();
                     return false;
                 }
+                //如果侧滑菜单处于打开, 关闭侧滑菜单, 并且消费事件
+                if (drawerLayout_main.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout_main.closeDrawers();
+                    return false;
+                }
+
                 break;
         }
         return true;
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        editor.putBoolean("isListView", isListView);
-        editor.apply();
+    /**
+     * 退出删除模式 并且 清空待删除数组
+     */
+    private void exitDeleteMode() {
         if (isDelete) {
             isDelete = false;
+            deleteNote.clear();
             isAllCheck = isAllCheck_NORMAL;
             menu.findItem(R.id.secret_toolbar).setVisible(false);
             menu.findItem(R.id.delete_toolbar).setVisible(false);
             menu.findItem(R.id.top_toolbar).setVisible(false);
             menu.findItem(R.id.allcheck_toolbar).setVisible(false);
             menu.findItem(R.id.view_toolbar).setVisible(true);
-            deleteNote.clear();//清除待删除列表
-            adapter.notifyDataSetChanged();
+            recordAdapter();
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        editor.putBoolean("isListView", isListView);
+        editor.putBoolean("isTheme_Light", isTheme_Light);
+        editor.apply();
+        exitDeleteMode();
     }
 }

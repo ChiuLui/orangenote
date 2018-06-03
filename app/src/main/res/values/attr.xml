@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="color_bg_main" format="color|reference"/>
+    <attr name="color_bg_item" format="color|reference"/>
+    <attr name="color_text_title" format="color|reference"/>
+    <attr name="color_text_content" format="color|reference"/>
+    <attr name="color_text_time" format="color|reference"/>
+    <attr name="color_toolbar_title" format="color|reference"/>
+</resources>
