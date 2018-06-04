@@ -6,6 +6,7 @@ import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -22,6 +23,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -31,10 +33,12 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -70,82 +74,157 @@ import android.support.v4.content.ContextCompat;
 import static com.orange.orangenote.MainActivity.isTheme_Light;
 
 
-public class NewNote extends AppCompatActivity {
+public class NewNote extends AppCompatActivity implements View.OnLayoutChangeListener {
 
-    /** 折叠工具栏 */
+    /**
+     * 折叠工具栏
+     */
     private CollapsingToolbarLayout collapsingToolbarLayout;
 
-    /** 保存按钮 */
+    /**
+     * 保存按钮
+     */
     private FloatingActionButton floatingActionButton;
 
-    /** 传过来的分钟 */
+    /**
+     * 传过来的分钟
+     */
     private String nowTime;
 
-    /** 传过来的日期 */
+    /**
+     * 传过来的日期
+     */
     private String nowDate;
 
-    /** 传过来的年份 */
+    /**
+     * 传过来的年份
+     */
     private String nowYear;
 
-    /** 传过来的内容 */
+    /**
+     * 传过来的内容
+     */
     private String nowContent;
 
-    /** 传过来的Note对象Id */
+    /**
+     * 传过来的Note对象Id
+     */
     private int nowId;
 
-    /** 判断当前便签是否为旧标签  true:旧标签 false:新便签 */
+    /**
+     * 判断当前便签是否为旧标签  true:旧标签 false:新便签
+     */
     private boolean nowState;
 
-    /** 传过来的是否私密便签 */
+    /**
+     * 传过来的是否私密便签
+     */
     private boolean nowIsSecret;
 
-    /** 用来代替ActionBar的ToolBar */
+    /**
+     * 用来代替ActionBar的ToolBar
+     */
     private Toolbar toolbar;
 
-    /** 富文本 */
+    /**
+     * 富文本
+     */
     private RichEditor richText;
 
-    /** SP存储的保存对象 */
+    /**
+     * SP存储的保存对象
+     */
     private SharedPreferences.Editor editor;
 
-    /** 取SP存储的对象 */
+    /**
+     * 取SP存储的对象
+     */
     private SharedPreferences prefer;
 
-    /** 公共的年.月.日 */
+    /**
+     * 公共的年.月.日
+     */
     private int mYear, mMonth, mDay;
 
-    /** 日期对象 */
+    /**
+     * 日期对象
+     */
     private Calendar calender;
 
-    /** 是否设置了提醒 */
+    /**
+     * 是否设置了提醒
+     */
     public static boolean isRemind;
 
-    /** 公共的菜单对象 */
+    /**
+     * 公共的菜单对象
+     */
     private Menu menu;
 
-    /** 显示提醒的时间 */
+    /**
+     * 显示提醒的时间
+     */
     public static TextView textView_toolbar;
 
-    /** 当前对象是否保存过 */
+    /**
+     * 当前对象是否保存过
+     */
     private boolean isSave = false;
 
-    /** 定义底部工具栏按钮 */
+    /**
+     * 定义底部工具栏按钮
+     */
     private ImageButton imgbtn_break, imgbtn_rebreak, imgbtn_image, imgbtn_center, imgbtn_bold, imgbtn_italic, imgbtn_underline, imgbtn_fontsize, imgbtn_checkbox;
 
-    /** 富文本的字体大小 */
+    /**
+     * 富文本的字体大小
+     */
     private static int FONTSIZE = 4;
 
-    /** 当前是否居中 */
+    /**
+     * 当前是否居中
+     */
     private static boolean isFontCenter = false;
 
-    /** 图片选择的请求码 */
+    /**
+     * 图片选择的请求码
+     */
     private static final int REQUEST_CODE_CHOOSE = 1;//定义请求码常量
 
-    /** 插入的图片uri地址 */
+    /**
+     * 插入的图片uri地址
+     */
     private String saveUri = null;
 
-    /** 用于保存选择的图片URI */
-    List<Uri> mSelected;
+    /**
+     * 用于保存选择的图片URI
+     */
+    private List<Uri> mSelected;
+
+    /**
+     * 富文本的滑动视图
+     */
+    private NestedScrollView scrollview_newnote;
+
+    /**
+     * 底下工具栏的滑动视图
+     */
+    private HorizontalScrollView scrollview_bottomttoolbaar;
+
+    /**
+     * Activity最外层的Layout视图
+     */
+    private View coordinatorlayout_newnote;
+
+    /**
+     * 屏幕高度
+     */
+    private int screenHeight = 0;
+
+    /**
+     * 软件盘弹起后所占高度阀值
+     */
+    private int keyHeight = 0;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -156,6 +235,14 @@ public class NewNote extends AppCompatActivity {
         isTheme_Light = prefer.getBoolean("isTheme_Light", true);
         ThemeChangeUtil.changeTheme(this, isTheme_Light);
         setContentView(R.layout.activity_new_note);
+
+        coordinatorlayout_newnote = findViewById(R.id.coordinatorlayout_newnote);
+        //获取屏幕高度
+        screenHeight = this.getWindowManager().getDefaultDisplay().getHeight();
+        //阀值设置为屏幕高度的1/3
+        keyHeight = screenHeight / 3;
+
+        scrollview_newnote = findViewById(R.id.scrollview_newnote);
 
         initBottonToolBar();
 
@@ -177,8 +264,9 @@ public class NewNote extends AppCompatActivity {
         collapsingToolbarLayout = findViewById(R.id.collapsingtoolbar_newnote);
         collapsingToolbarLayout.setTitle(nowDate + " " + nowTime);
 
+        textView_toolbar = findViewById(R.id.textview_toolbar_newnote);
 
-        AlphaAnimation animation = new AlphaAnimation(0 , 1);
+        AlphaAnimation animation = new AlphaAnimation(0, 1);
         animation.setDuration(1000);
         richText = findViewById(R.id.richedit_newnote_content);
         richText.setAnimation(animation);
@@ -207,14 +295,14 @@ public class NewNote extends AppCompatActivity {
                     imgbtn_break.setVisibility(View.GONE);
                 }
                 //不为空内容
-                if ( !(richText.getHtml().isEmpty())
+                if (!(richText.getHtml().isEmpty())
                         && (text.length() > 0)
                         && !(text.equals(""))
                         && (text != null)
                         && !(text.equals(" "))
                         && !(text.equals("\n"))
                         && !(text.equals("<br><br>"))
-                        && !(text.equals("&nbsp;")) ) {
+                        && !(text.equals("&nbsp;"))) {
                     //保存
                     saveToDatabast();
 
@@ -224,7 +312,7 @@ public class NewNote extends AppCompatActivity {
                         //取出每个对象对比
                         for (NoteImagePath imagePath : noteImagePaths) {
                             //没有就从列表中删除
-                            if (text.indexOf(imagePath.getImagePath()) == -1){
+                            if (text.indexOf(imagePath.getImagePath()) == -1) {
                                 Toast.makeText(NewNote.this, "删除图片", Toast.LENGTH_SHORT).show();
                                 imagePath.delete();
                             }
@@ -237,23 +325,6 @@ public class NewNote extends AppCompatActivity {
                 }
             }
         });
-
-        textView_toolbar = findViewById(R.id.textview_toolbar_newnote);
-
-//        //如果传进来的标志为旧便签就不显示光标
-//        if (nowState) {
-//            editText.setCursorVisible(false);
-//        }
-//
-//        //为edittext设置触摸事件
-//        editText.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                //一触摸就显示光标
-//                editText.setCursorVisible(true);
-//                return false;
-//            }
-//        });
 
         toolbar = findViewById(R.id.toolbar_newnote);
         //初始化工具栏
@@ -279,6 +350,7 @@ public class NewNote extends AppCompatActivity {
 
     /**
      * 保存插入的图片uri地址
+     *
      * @param nowId
      * @param path
      */
@@ -309,6 +381,7 @@ public class NewNote extends AppCompatActivity {
      * 初始化底部工具栏控件
      */
     private void initBottonToolBar() {
+        scrollview_bottomttoolbaar = findViewById(R.id.scrollview_bottomttoolbaar);
         imgbtn_image = findViewById(R.id.imgbtn_image);
         imgbtn_center = findViewById(R.id.imgbtn_center);
         imgbtn_bold = findViewById(R.id.imgbtn_bold);
@@ -363,7 +436,7 @@ public class NewNote extends AppCompatActivity {
             //保存内容
             note.setContent(richText.getHtml());
             //是否为置顶便签
-            if (note.isTop()){
+            if (note.isTop()) {
                 note.setTimeStamp(DateUtil.getTimeStamp() + MainActivity.ADDTIMESTAMP);
             } else {
                 note.setTimeStamp(DateUtil.getTimeStamp());
@@ -391,6 +464,7 @@ public class NewNote extends AppCompatActivity {
 
     /**
      * 菜单栏创建的回调
+     *
      * @param menu
      * @return
      */
@@ -403,6 +477,7 @@ public class NewNote extends AppCompatActivity {
 
     /**
      * 菜单栏准备完成的回调
+     *
      * @param menu
      * @return
      */
@@ -559,6 +634,7 @@ public class NewNote extends AppCompatActivity {
 
     /**
      * 设置提醒
+     *
      * @param year
      * @param month
      * @param day
@@ -736,6 +812,7 @@ public class NewNote extends AppCompatActivity {
 
     /**
      * 权限返回的
+     *
      * @param requestCode
      * @param permissions
      * @param grantResults
@@ -765,6 +842,38 @@ public class NewNote extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        coordinatorlayout_newnote.addOnLayoutChangeListener(this);
+    }
+
+    /**
+     * 监听布局改变(监听软键盘)
+     *
+     * @param v
+     * @param left
+     * @param top
+     * @param right
+     * @param bottom
+     * @param oldLeft
+     * @param oldTop
+     * @param oldRight
+     * @param oldBottom
+     */
+    @Override
+    public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                               int oldLeft, int oldTop, int oldRight, int oldBottom) {
+        //现在认为只要控件将Activity向上推的高度超过了1/3屏幕高，就认为软键盘弹起
+        if (oldBottom != 0 && bottom != 0 && (oldBottom - bottom > keyHeight)) {
+            scrollview_bottomttoolbaar.setVisibility(View.VISIBLE);
+            //软键盘关闭
+        } else if (oldBottom != 0 && bottom != 0 && (bottom - oldBottom > keyHeight)) {
+            scrollview_bottomttoolbaar.setVisibility(View.GONE);
+        }
+
+    }
+
     /**
      * 点击事件监听
      */
@@ -786,6 +895,7 @@ public class NewNote extends AppCompatActivity {
                     break;
                 //插入图片
                 case R.id.imgbtn_image:
+                    //获取焦点
                     Log.e("TAG", "onClick: imgbtn_image");
                     if (Build.VERSION.SDK_INT >= 24) {
                         List<String> permissionList = new ArrayList<>();
@@ -863,13 +973,14 @@ public class NewNote extends AppCompatActivity {
                 .gridExpectedSize(getResources().getDimensionPixelSize(R.dimen.grid_expected_size))//图片显示表格的大小
                 .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)//图像选择和预览活动所需的方向。
                 .thumbnailScale(0.85f)//缩放比例
-                .theme(isTheme_Light == true? R.style.Matisse_Zhihu : R.style.Matisse_Dracula)//主题  暗色主题 R.style.Matisse_Dracula
+                .theme(isTheme_Light == true ? R.style.Matisse_Zhihu : R.style.Matisse_Dracula)//主题  暗色主题 R.style.Matisse_Dracula
                 .imageEngine(new GlideEngine())//加载方式
                 .forResult(REQUEST_CODE_CHOOSE);//请求码
     }
 
     /**
      * 选择图片后的回调
+     *
      * @param requestCode
      * @param resultCode
      * @param data

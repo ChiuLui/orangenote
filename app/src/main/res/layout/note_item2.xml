@@ -70,7 +70,8 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="right"
                     android:button="@drawable/chackbok"
-                    android:paddingRight="10dp" />
+                    android:paddingRight="10dp"
+                    android:enabled="false"/>
 
             </LinearLayout>
 

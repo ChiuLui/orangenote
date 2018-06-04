@@ -28,7 +28,7 @@
         </activity>
         <activity
             android:name=".NewNote"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
 
         <receiver
             android:name=".RemindReceiver"

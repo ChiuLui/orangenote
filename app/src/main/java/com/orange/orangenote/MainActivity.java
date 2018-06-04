@@ -727,8 +727,14 @@ public class MainActivity extends AppCompatActivity {
                 break;
             //全选
             case R.id.allcheck_toolbar:
+                int temp = 0;
+                for (Note note : noteList) {
+                    if (note.isTop() == isTop) {
+                        temp++;
+                    }
+                }
                 //每次点击判断是否全选
-                if (deleteNote.size() != noteList.size()) {
+                if (deleteNote.size() != temp) {
                     //不是全选就选择正常状态
                     isAllCheck = isAllCheck_NORMAL;
                 }
