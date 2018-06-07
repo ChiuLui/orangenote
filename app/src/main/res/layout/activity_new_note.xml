@@ -9,7 +9,7 @@
     tools:context="com.orange.orangenote.NewNote">
 
     <android.support.design.widget.AppBarLayout
-        android:id="@+id/appBar_newnote"
+        android:id="@+id/appbarlayout_newnote"
         android:layout_width="match_parent"
         android:layout_height="125dp"
         android:fitsSystemWindows="true">
@@ -97,7 +97,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:src="@drawable/selected"
-        app:layout_anchor="@id/appBar_newnote"
+        app:layout_anchor="@id/appbarlayout_newnote"
         app:layout_anchorGravity="bottom|end" />
 
         <include layout="@layout/bottomtoolbar" />

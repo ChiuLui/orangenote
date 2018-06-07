@@ -35,4 +35,5 @@ dependencies {
     compile 'com.zhihu.android:matisse:0.4.3'
     compile 'id.zelory:compressor:2.1.0'
     compile 'com.yalantis:phoenix:1.2.3'
+    compile 'com.jrummyapps:colorpicker:2.1.6'
 }

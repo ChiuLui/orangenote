@@ -19,7 +19,9 @@ import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -31,6 +33,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -38,12 +41,15 @@ import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.jrummyapps.android.colorpicker.ColorPickerDialog;
+import com.jrummyapps.android.colorpicker.ColorPickerDialogListener;
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.util.DateUtil;
@@ -122,9 +128,19 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
     private boolean nowIsSecret;
 
     /**
+     * ActionBarLayout布局
+     */
+    private AppBarLayout appbarlayout_newnote;
+
+    /**
      * 用来代替ActionBar的ToolBar
      */
     private Toolbar toolbar;
+
+    /**
+     * ActionBar控件
+     */
+    private ActionBar actionBar;
 
     /**
      * 富文本
@@ -174,22 +190,34 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
     /**
      * 定义底部工具栏按钮
      */
-    private ImageButton imgbtn_break, imgbtn_rebreak, imgbtn_image, imgbtn_center, imgbtn_bold, imgbtn_italic, imgbtn_underline, imgbtn_fontsize, imgbtn_checkbox;
+    private ImageButton imgbtn_break, imgbtn_rebreak, imgbtn_image, imgbtn_center,
+            imgbtn_bold, imgbtn_italic, imgbtn_underline, imgbtn_fontsize,
+            imgbtn_checkbox, imgbtn_insertlink, imgbtn_textcolor, imgbtn_textbackgroundcolor,
+            imgbtn_unorderedlist, imgbtn_orderedlist;
 
     /**
      * 富文本的字体大小
      */
-    private static int FONTSIZE = 4;
+    private int FONTSIZE = 4;
 
     /**
      * 当前是否居中
      */
-    private static boolean isFontCenter = false;
+    private boolean isFontCenter = false;
+
+    private boolean isChanged_TextColor;
+
+    private boolean isChanged_TextBackgroundColor;
+
+    /**
+     * 颜色选择id
+     */
+    public static final int DIALGE_ID = 0;
 
     /**
      * 图片选择的请求码
      */
-    private static final int REQUEST_CODE_CHOOSE = 1;//定义请求码常量
+    private final int REQUEST_CODE_CHOOSE = 1;//定义请求码常量
 
     /**
      * 插入的图片uri地址
@@ -225,6 +253,26 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
      * 软件盘弹起后所占高度阀值
      */
     private int keyHeight = 0;
+
+    /**
+     * 取你触摸点相对于屏幕顶边的偏移
+     */
+    private int onTouch_getRawY;
+
+    /**
+     * 取相对于你触摸的view的顶边的偏移(Y坐标)
+     */
+    private int onTouch_getY;
+
+    /**
+     * 取到的是控件在屏幕中你能看到的高度(可能上面或下面有隐藏的部分)
+     */
+    private int richText_Height;
+
+    /**
+     * 取到的是控件真实的高度包括上面或下面隐藏的部分
+     */
+    private int richText_MeasuredHeight;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -265,6 +313,7 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
         collapsingToolbarLayout.setTitle(nowDate + " " + nowTime);
 
         textView_toolbar = findViewById(R.id.textview_toolbar_newnote);
+        appbarlayout_newnote = findViewById(R.id.appbarlayout_newnote);
 
         AlphaAnimation animation = new AlphaAnimation(0, 1);
         animation.setDuration(1000);
@@ -281,6 +330,8 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
         richText.setPadding(10, 10, 10, 10);
         richText.setPlaceholder("随便记点什么吧...");
         richText.setHtml(nowContent);
+
+        richText.setOnTouchListener(new mOnTouchListener());
 
         /**
          * 监听内容改变
@@ -323,13 +374,22 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                 if (saveUri != null) {
                     saveNoteImagePath(nowId, saveUri);
                 }
+                //如果richText控件高度变大, 就滚动高度
+//                if (richText.getHeight() > richText_Height){
+//                    scrollview_newnote.scrollTo(0,screenHeight + (richText.getHeight() - richText_Height));
+//                }
+//                if (richText.getMeasuredHeight() > richText_MeasuredHeight){
+//                    scrollview_newnote.scrollTo(0,  (onTouch_getY - (screenHeight / 4)) + (richText.getMeasuredHeight() - richText_MeasuredHeight));
+//                    richText_MeasuredHeight = richText.getMeasuredHeight();
+//                }
+
             }
         });
 
         toolbar = findViewById(R.id.toolbar_newnote);
         //初始化工具栏
         setSupportActionBar(toolbar);
-        ActionBar actionBar = getSupportActionBar();
+        actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setHomeAsUpIndicator(R.drawable.back);
             actionBar.setDisplayHomeAsUpEnabled(true);
@@ -375,6 +435,11 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
         imgbtn_break.setOnClickListener(new mClick());
         imgbtn_rebreak.setOnClickListener(new mClick());
         imgbtn_underline.setOnClickListener(new mClick());
+        imgbtn_insertlink.setOnClickListener(new mClick());
+        imgbtn_textcolor.setOnClickListener(new mClick());
+        imgbtn_textbackgroundcolor.setOnClickListener(new mClick());
+        imgbtn_unorderedlist.setOnClickListener(new mClick());
+        imgbtn_orderedlist.setOnClickListener(new mClick());
     }
 
     /**
@@ -391,6 +456,11 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
         imgbtn_break = findViewById(R.id.imgbtn_break);
         imgbtn_rebreak = findViewById(R.id.imgbtn_rebreak);
         imgbtn_underline = findViewById(R.id.imgbtn_underline);
+        imgbtn_insertlink = findViewById(R.id.imgbtn_insertlink);
+        imgbtn_textcolor = findViewById(R.id.imgbtn_textcolor);
+        imgbtn_textbackgroundcolor = findViewById(R.id.imgbtn_textbackgroundcolor);
+        imgbtn_unorderedlist = findViewById(R.id.imgbtn_unorderedlist);
+        imgbtn_orderedlist = findViewById(R.id.imgbtn_orderedlist);
     }
 
     /**
@@ -848,6 +918,8 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
         coordinatorlayout_newnote.addOnLayoutChangeListener(this);
     }
 
+
+
     /**
      * 监听布局改变(监听软键盘)
      *
@@ -866,12 +938,41 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                                int oldLeft, int oldTop, int oldRight, int oldBottom) {
         //现在认为只要控件将Activity向上推的高度超过了1/3屏幕高，就认为软键盘弹起
         if (oldBottom != 0 && bottom != 0 && (oldBottom - bottom > keyHeight)) {
+            appbarlayout_newnote.setExpanded(false);
             scrollview_bottomttoolbaar.setVisibility(View.VISIBLE);
+            richText_Height = richText.getHeight();
+            richText_MeasuredHeight = richText.getMeasuredHeight();
+            if (screenHeight / 2 < onTouch_getRawY) {
+//                scrollview_newnote.scrollTo(0, screenHeight / 2 + (onTouch_getRawY - screenHeight));
+                scrollview_newnote.scrollTo(0, onTouch_getY - (screenHeight / 4));
+            }
+
+//            scrollview_newnote.scrollTo(bottom, right);
             //软键盘关闭
         } else if (oldBottom != 0 && bottom != 0 && (bottom - oldBottom > keyHeight)) {
+            appbarlayout_newnote.setExpanded(true);
             scrollview_bottomttoolbaar.setVisibility(View.GONE);
         }
 
+    }
+
+    /**
+     * 触摸事件
+     */
+    private class mOnTouchListener implements View.OnTouchListener {
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            switch (v.getId()) {
+                case R.id.richedit_newnote_content:
+                    onTouch_getRawY = (int) event.getRawY();
+                    onTouch_getY = (int) event.getY();
+                    Log.e("TAG", "onTouchEvent: Y=" + onTouch_getRawY);
+                    Log.e("TAG", "onTouchEvent: Y=" + onTouch_getY);
+                    break;
+            }
+            return false;
+        }
     }
 
     /**
@@ -951,12 +1052,89 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                     }
                     Log.e("TAG", "!!!!!!!!!!!!!FONTSIZE = " + FONTSIZE);
                     break;
+                case R.id.imgbtn_insertlink:
+                    richText.insertLink("", "");
+                    break;
+                case R.id.imgbtn_textcolor:
+                    if (isTheme_Light) {
+                        if (isChanged_TextColor) {
+                            richText.setTextColor(Color.parseColor("#333333"));
+                        } else {
+                            Log.e("TAG", "!!!!!!!!!!!!!!!!开始选择颜色啦");
+                            opeAdvancenDialog();
+                            Log.e("TAG", "!!!!!!!!!!从颜色选择器回来啦!!");
+                        }
+                    } else {
+                        if (isChanged_TextColor) {
+                            richText.setTextColor(Color.parseColor("#dadada"));
+                        } else {
+                            opeAdvancenDialog();
+                        }
+                    }
+                    Log.e("TAG", "!!!!!!!!!!!!!!到末尾啦" );
+                    isChanged_TextColor = !isChanged_TextColor;
+                    break;
+                case R.id.imgbtn_textbackgroundcolor:
+                    if (isTheme_Light) {
+                        richText.setTextBackgroundColor(isChanged_TextBackgroundColor ? Color.parseColor("#FFFFFF") : Color.YELLOW);
+                    } else {
+                        richText.setTextBackgroundColor(isChanged_TextBackgroundColor ? Color.parseColor("#303030") : Color.YELLOW);
+                    }
+                    isChanged_TextBackgroundColor = !isChanged_TextBackgroundColor;
+                    break;
+                case R.id.imgbtn_unorderedlist:
+                    richText.setBullets();
+                    break;
+                case R.id.imgbtn_orderedlist:
+                    richText.setNumbers();
+                    break;
                 //待办事项
                 case R.id.imgbtn_checkbox:
                     richText.insertTodo();
                     break;
             }
         }
+    }
+
+    /**
+     * 弹出颜色选择dialog
+     */
+    private void opeAdvancenDialog() {
+        Log.e("TAG", "!!!!!!!!!!!!!进入颜色选择器啦");
+        //隐藏窗口
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(richText.getWindowToken(), 0);
+        int color = Color.RED;
+        //传入的默认color
+        ColorPickerDialog colorPickerDialog = ColorPickerDialog.newBuilder().setColor(color)
+                .setDialogTitle(R.string.cpv_default_title)
+        //设置dialog标题
+                .setDialogType(ColorPickerDialog.TYPE_PRESETS)
+        //设置为自定义模式
+                .setShowAlphaSlider(true)
+        //设置有透明度模式，默认没有透明度
+                .setDialogId(DIALGE_ID)
+        //设置Id,回调时传回用于判断
+                .setAllowPresets(true)
+        //不显示预知模式
+                .create();
+        //Buider创建
+        colorPickerDialog.setColorPickerDialogListener(new ColorPickerDialogListener() {
+            @Override
+            public void onColorSelected(int dialogId, int color) {
+                Log.e("TAG", "!!!!!!!!!选择了颜色啦");
+                if (dialogId == DIALGE_ID) {
+                    richText.setTextColor(Color.parseColor("#" + Integer.toHexString(color)));
+                }
+            }
+
+            @Override
+            public void onDialogDismissed(int dialogId) {
+
+            }
+        });
+        //设置回调，用于获取选择的颜色
+        colorPickerDialog.show(this.getFragmentManager(), "color-picker-dialog");
     }
 
     /**

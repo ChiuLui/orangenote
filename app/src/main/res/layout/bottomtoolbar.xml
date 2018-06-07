@@ -17,7 +17,6 @@
             android:id="@+id/imgbtn_break"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginLeft="10dp"
             android:background="@null"
             android:contentDescription="@null"
             android:src="@drawable/text_break"
@@ -27,7 +26,6 @@
             android:id="@+id/imgbtn_rebreak"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginLeft="10dp"
             android:background="@null"
             android:contentDescription="@null"
             android:src="@drawable/text_rebreak"
@@ -37,7 +35,6 @@
             android:id="@+id/imgbtn_image"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginLeft="10dp"
             android:background="@null"
             android:contentDescription="@null"
             android:src="@drawable/insertimage_icon" />
@@ -46,7 +43,6 @@
             android:id="@+id/imgbtn_center"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginLeft="10dp"
             android:background="@null"
             android:contentDescription="@null"
             android:src="@drawable/center_icon" />
@@ -55,7 +51,6 @@
             android:id="@+id/imgbtn_bold"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginLeft="10dp"
             android:background="@null"
             android:contentDescription="@null"
             android:src="@drawable/bold_icon" />
@@ -64,7 +59,6 @@
             android:id="@+id/imgbtn_italic"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginLeft="10dp"
             android:background="@null"
             android:contentDescription="@null"
             android:src="@drawable/italic_icon" />
@@ -73,7 +67,6 @@
             android:id="@+id/imgbtn_underline"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginLeft="10dp"
             android:background="@null"
             android:contentDescription="@null"
             android:src="@drawable/underline_icon" />
@@ -82,16 +75,54 @@
             android:id="@+id/imgbtn_fontsize"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginLeft="10dp"
             android:background="@null"
             android:contentDescription="@null"
             android:src="@drawable/fontsize_icon" />
 
         <ImageButton
+            android:id="@+id/imgbtn_textcolor"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@null"
+            android:contentDescription="@null"
+            android:src="@drawable/textcolor_icon" />
+
+        <ImageButton
+            android:id="@+id/imgbtn_textbackgroundcolor"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@null"
+            android:contentDescription="@null"
+            android:src="@drawable/textbackgroundcolor_icon" />
+
+        <ImageButton
+            android:id="@+id/imgbtn_insertlink"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@null"
+            android:contentDescription="@null"
+            android:src="@drawable/insertlink_icon" />
+
+        <ImageButton
+            android:id="@+id/imgbtn_unorderedlist"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@null"
+            android:contentDescription="@null"
+            android:src="@drawable/unorderedlinst_icon" />
+
+        <ImageButton
+            android:id="@+id/imgbtn_orderedlist"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@null"
+            android:contentDescription="@null"
+            android:src="@drawable/orderedlist_icon" />
+
+        <ImageButton
             android:id="@+id/imgbtn_checkbox"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginLeft="10dp"
             android:background="@null"
             android:contentDescription="@null"
             android:src="@drawable/checkbox_newnote_b" />
