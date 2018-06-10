@@ -53,12 +53,22 @@
 
     </android.support.design.widget.CoordinatorLayout>
 
-    <android.support.design.widget.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="match_parent"
+    <ScrollView
+        android:id="@+id/scrollView_main"
+        android:scrollbarThumbVertical="@android:color/transparent"
+        android:layout_width="@dimen/sliding_menu_width"
         android:layout_height="match_parent"
-        android:layout_gravity="start"
-        app:headerLayout="@layout/nav_header"
-        app:menu="@menu/nav_menu" />
+        android:layout_gravity="start|bottom">
+
+        <LinearLayout
+            android:id="@+id/left_drawer_main"
+            android:orientation="vertical"
+            android:layout_width="@dimen/sliding_menu_width"
+            android:layout_height="wrap_content"
+            android:divider="@android:color/transparent"
+            android:background="@android:color/transparent">
+        </LinearLayout>
+
+    </ScrollView>
 
 </android.support.v4.widget.DrawerLayout>

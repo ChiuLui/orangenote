@@ -274,6 +274,8 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
      */
     private int richText_MeasuredHeight;
 
+    private String TextColor;
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -936,6 +938,9 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
     @Override
     public void onLayoutChange(View v, int left, int top, int right, int bottom,
                                int oldLeft, int oldTop, int oldRight, int oldBottom) {
+        if (TextColor != null){
+            richText.setTextColor(Color.parseColor(TextColor));
+        }
         //现在认为只要控件将Activity向上推的高度超过了1/3屏幕高，就认为软键盘弹起
         if (oldBottom != 0 && bottom != 0 && (oldBottom - bottom > keyHeight)) {
             appbarlayout_newnote.setExpanded(false);
@@ -1059,14 +1064,14 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                     if (isTheme_Light) {
                         if (isChanged_TextColor) {
                             richText.setTextColor(Color.parseColor("#333333"));
+                            TextColor = null;
                         } else {
-                            Log.e("TAG", "!!!!!!!!!!!!!!!!开始选择颜色啦");
                             opeAdvancenDialog();
-                            Log.e("TAG", "!!!!!!!!!!从颜色选择器回来啦!!");
                         }
                     } else {
                         if (isChanged_TextColor) {
                             richText.setTextColor(Color.parseColor("#dadada"));
+                            TextColor = null;
                         } else {
                             opeAdvancenDialog();
                         }
@@ -1125,6 +1130,7 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                 Log.e("TAG", "!!!!!!!!!选择了颜色啦");
                 if (dialogId == DIALGE_ID) {
                     richText.setTextColor(Color.parseColor("#" + Integer.toHexString(color)));
+                    TextColor = "#" + Integer.toHexString(color);
                 }
             }
 
