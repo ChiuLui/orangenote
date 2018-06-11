@@ -8,10 +8,7 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.NavigationView;
-import android.support.v4.media.RatingCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -24,7 +21,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -36,16 +32,14 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.orange.orangenote.animation.RippleAnimation;
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.fragment.ContentFragment;
 import com.orange.orangenote.util.DateUtil;
-import com.orange.orangenote.util.StringToAscii;
 import com.orange.orangenote.util.ThemeChangeUtil;
 import com.yalantis.phoenix.PullToRefreshView;
 
-import org.litepal.crud.DataSupport;
+import org.litepal.LitePal;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -393,6 +387,13 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
 //        }
 //    }
 
+    /**
+     * 监听滑动菜单点击
+     * @param slideMenuItem
+     * @param screenShotable
+     * @param position
+     * @return
+     */
     @Override
     public ScreenShotable onSwitch(Resourceble slideMenuItem, ScreenShotable screenShotable, int position) {
         switch (slideMenuItem.getName()) {
@@ -659,7 +660,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                                                             //更新后重新赋值密码
                                                             Password = prefer.getString("Password", null);
                                                             //得到私密便签
-                                                            List<Note> secretNote = DataSupport.where("isSecret = ?", "1").order("timeStamp desc").find(Note.class);
+                                                            List<Note> secretNote = LitePal.where("isSecret = ?", "1").order("timeStamp desc").find(Note.class);
                                                             if (!(secretNote.isEmpty())) {
                                                                 //删除私密便签
                                                                 deleteNoteList(secretNote);
@@ -733,7 +734,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                                                             //更新后重新赋值密码
                                                             Password = prefer.getString("Password", null);
                                                             //得到私密便签
-                                                            List<Note> secretNote = DataSupport.where("isSecret = ?", "1").order("timeStamp desc").find(Note.class);
+                                                            List<Note> secretNote = LitePal.where("isSecret = ?", "1").order("timeStamp desc").find(Note.class);
                                                             if (!(secretNote.isEmpty())) {
                                                                 //删除私密便签
                                                                 deleteNoteList(secretNote);
@@ -971,7 +972,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         //遍历待删除列表
         for (Note note : deleteNote) {
             //如果插入了图片
-            List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);
+            List<NoteImagePath> noteImagePaths = LitePal.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);
             if (!(noteImagePaths.isEmpty())) {
                 Toast.makeText(MainActivity.this, "如果返回图片list不为空: ", Toast.LENGTH_SHORT).show();
                 //循环删除当前NoteId下的图片文件
@@ -982,7 +983,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                 }
             }
             //删除当前NoteId图片地址的数据库数据
-            DataSupport.deleteAll(NoteImagePath.class, "noteId = ?", note.getId() + "");
+            LitePal.deleteAll(NoteImagePath.class, "noteId = ?", note.getId() + "");
 
             //如果设置了提醒功能
             if (note.isRemind()) {
@@ -1012,7 +1013,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
     private void recordAdapter() {
 
         //查询倒序
-        noteList = DataSupport.where("isSecret = ?", "0").order("timeStamp desc").find(Note.class);
+        noteList = LitePal.where("isSecret = ?", "0").order("timeStamp desc").find(Note.class);
         adapter = new NoteAdapter(MainActivity.this, this.noteList);
         recyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();

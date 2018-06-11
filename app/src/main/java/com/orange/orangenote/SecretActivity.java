@@ -6,11 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -30,9 +26,8 @@ import com.orange.orangenote.db.Note;
 import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.util.DateUtil;
 import com.orange.orangenote.util.ThemeChangeUtil;
-import com.yalantis.phoenix.PullToRefreshView;
 
-import org.litepal.crud.DataSupport;
+import org.litepal.LitePal;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -332,7 +327,7 @@ public class SecretActivity extends AppCompatActivity {
         //遍历待删除列表
         for (Note note : deleteNote) {
             //如果插入了图片
-            List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);
+            List<NoteImagePath> noteImagePaths = LitePal.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);
             if (!(noteImagePaths.isEmpty())) {
                 Toast.makeText(SecretActivity.this, "如果返回图片list不为空: ", Toast.LENGTH_SHORT).show();
                 //循环删除当前NoteId下的图片文件
@@ -343,7 +338,7 @@ public class SecretActivity extends AppCompatActivity {
                 }
             }
             //删除当前NoteId图片地址的数据库数据
-            DataSupport.deleteAll(NoteImagePath.class, "noteId = ?", note.getId() + "");
+            LitePal.deleteAll(NoteImagePath.class, "noteId = ?", note.getId() + "");
 
             //如果设置了提醒功能
             if (note.isRemind()) {
@@ -375,7 +370,7 @@ public class SecretActivity extends AppCompatActivity {
 //        noteList = DataSupport.where("isSecret = ?", true + "").order("timeStamp desc").find(Note.class);
 //        noteList = DataSupport.findAll(Note.class);
         //查询倒序
-        noteList = DataSupport.where("isSecret = ?", "1").order("timeStamp desc").find(Note.class);
+        noteList = LitePal.where("isSecret = ?", "1").order("timeStamp desc").find(Note.class);
         for (Note note : noteList){
             Log.e("TAG", "-------------------------------------------- " );
             Log.e("TAG", "id = " + note.getId() );

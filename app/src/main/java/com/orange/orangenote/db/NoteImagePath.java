@@ -1,6 +1,7 @@
 package com.orange.orangenote.db;
 
 import org.litepal.crud.DataSupport;
+import org.litepal.crud.LitePalSupport;
 
 /**
  * 插入的图片地址
@@ -10,7 +11,7 @@ import org.litepal.crud.DataSupport;
  * @copyright 赵蕾
  */
 
-public class NoteImagePath extends DataSupport {
+public class NoteImagePath extends LitePalSupport {
 
     /** ID */
     private int id;

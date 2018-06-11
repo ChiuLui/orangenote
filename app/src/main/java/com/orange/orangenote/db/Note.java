@@ -1,6 +1,7 @@
 package com.orange.orangenote.db;
 
 import org.litepal.crud.DataSupport;
+import org.litepal.crud.LitePalSupport;
 
 
 /**
@@ -11,7 +12,7 @@ import org.litepal.crud.DataSupport;
  * @copyright 赵蕾
  */
 
-public class Note extends DataSupport {
+public class Note extends LitePalSupport {
 
     /** 便签的ID */
     private int id;

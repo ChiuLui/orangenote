@@ -19,7 +19,6 @@ import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -33,7 +32,6 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -41,7 +39,6 @@ import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
-import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -61,7 +58,7 @@ import com.zhihu.matisse.MimeType;
 import com.zhihu.matisse.engine.impl.GlideEngine;
 import com.zhihu.matisse.internal.entity.CaptureStrategy;
 
-import org.litepal.crud.DataSupport;
+import org.litepal.LitePal;
 
 import java.io.File;
 import java.io.IOException;
@@ -360,7 +357,7 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                     saveToDatabast();
 
                     //从数据库删除不存在的图片地址
-                    List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", nowId + "").find(NoteImagePath.class);
+                    List<NoteImagePath> noteImagePaths = LitePal.where("noteId = ?", nowId + "").find(NoteImagePath.class);
                     if (!(noteImagePaths.isEmpty())) {
                         //取出每个对象对比
                         for (NoteImagePath imagePath : noteImagePaths) {
@@ -489,7 +486,7 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                 && !(richText.getHtml().equals("&nbsp;"))) {
             Note note = null;
             if (isSave || nowState) {//如果是旧便签或保存过就得到旧对象
-                note = DataSupport.find(Note.class, nowId);
+                note = LitePal.find(Note.class, nowId);
             } else {
                 //创建表
                 note = new Note();
@@ -529,7 +526,7 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
             if (isRemind) {
                 stopRemind(nowId);
             }
-            DataSupport.deleteAll(Note.class, "id = ?", nowId + "");
+            LitePal.deleteAll(Note.class, "id = ?", nowId + "");
         }
         Log.e("TAG", "当前时间毫秒值 = " + DateUtil.getTimeStamp());
     }
@@ -672,7 +669,7 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                         //在数据库更新状态
                         isRemind = true;
-                        Note note = DataSupport.find(Note.class, nowId);
+                        Note note = LitePal.find(Note.class, nowId);
                         note.setRemind(isRemind);
                         note.setYearRemind(mYear);
                         note.setMonthRemind(mMonth);
@@ -795,7 +792,7 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
         //更换状态
         isRemind = false;
         //数据库更新状态
-        Note note = DataSupport.find(Note.class, nowId);
+        Note note = LitePal.find(Note.class, nowId);
         note.setRemind(isRemind);
         note.setToDefault("yearRemind");
         note.setToDefault("monthRemind");
@@ -811,7 +808,7 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
     private void showRemindTime() {
         //显示提示时间
         Calendar calendar = Calendar.getInstance();
-        Note note = DataSupport.find(Note.class, nowId);
+        Note note = LitePal.find(Note.class, nowId);
         String hour = note.getHourRemind() + "";
         String minute = note.getMinuteRemind() + "";
         if (note.getHourRemind() < 10) {

@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -20,7 +19,7 @@ import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.util.ContentUtil;
 import com.orange.orangenote.util.dp2px;
 
-import org.litepal.crud.DataSupport;
+import org.litepal.LitePal;
 
 import java.util.List;
 
@@ -51,7 +50,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
      * @param note
      */
     public void deleteNote(Note note) {
-        DataSupport.deleteAll(Note.class, "id = ?", note.getId() + "");
+        LitePal.deleteAll(Note.class, "id = ?", note.getId() + "");
         mNoteList.remove(note);
     }
 
@@ -226,7 +225,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
         }
         //判断如果内容包含图片,则显示图片设置图片
         if (note.getContent().indexOf("/storage/emulated/0/Pictures/") != -1) {
-            List<NoteImagePath> noteImagePaths = DataSupport.where("noteId = ?", note.getId() + "").order("id desc").find(NoteImagePath.class);
+            List<NoteImagePath> noteImagePaths = LitePal.where("noteId = ?", note.getId() + "").order("id desc").find(NoteImagePath.class);
             if (!(noteImagePaths.isEmpty())) {
                 for (NoteImagePath noteImagePath : noteImagePaths) {
                     String path = noteImagePath.getImagePath();

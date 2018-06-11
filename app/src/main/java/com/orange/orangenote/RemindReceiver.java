@@ -14,26 +14,21 @@ import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.View;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.util.ContentUtil;
 
-import org.litepal.crud.DataSupport;
+import org.litepal.LitePal;
 
 import java.io.File;
 import java.io.IOException;
 
-import static android.content.Context.INPUT_METHOD_SERVICE;
 import static android.content.Context.KEYGUARD_SERVICE;
-import static android.content.Context.NOTIFICATION_SERVICE;
 
 public class RemindReceiver extends BroadcastReceiver {
 
@@ -139,7 +134,7 @@ public class RemindReceiver extends BroadcastReceiver {
 
         //修改数据库数据
         NewNote.isRemind = false;
-        Note note = DataSupport.find(Note.class, nowId);
+        Note note = LitePal.find(Note.class, nowId);
         note.setRemind(false); // raise the price
         note.setToDefault("yearRemind");
         note.setToDefault("monthRemind");
