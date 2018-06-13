@@ -2,4 +2,6 @@
     <string name="app_name">橙子便签</string>
     <string name="drawer_open">Open</string>
     <string name="drawer_close">Close</string>
+    <string name="version">V1.0.0</string>
+    <!-- 记得改版本号有两个地方 -->
 </resources>

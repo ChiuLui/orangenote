@@ -45,7 +45,8 @@
                 android:resource="@xml/file_paths_public" />
         </provider>
 
-        <activity android:name=".SecretActivity"></activity>
+        <activity android:name=".SecretActivity" />
+        <activity android:name=".CopyrightActivity"></activity>
     </application>
 
 </manifest>

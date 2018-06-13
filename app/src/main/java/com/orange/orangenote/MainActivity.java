@@ -337,22 +337,14 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
     }
 
     private void createMenuList() {
-        SlideMenuItem menuItem0 = new SlideMenuItem(ContentFragment.CLOSE, R.drawable.icn_close);
+        SlideMenuItem menuItem0 = new SlideMenuItem(ContentFragment.CLOSE, isTheme_Light == true? R.drawable.icn_closedaytime : R.drawable.icn_closenight);
         list.add(menuItem0);
-        SlideMenuItem menuItem = new SlideMenuItem(ContentFragment.BUILDING, R.drawable.icn_1);
+        SlideMenuItem menuItem = new SlideMenuItem(ContentFragment.THEME, isTheme_Light == true? R.drawable.icn_night : R.drawable.icn_daytime);
         list.add(menuItem);
-        SlideMenuItem menuItem2 = new SlideMenuItem(ContentFragment.BOOK, R.drawable.icn_2);
+        SlideMenuItem menuItem2 = new SlideMenuItem(ContentFragment.INREGARDTO, R.drawable.icn_inregardto);
         list.add(menuItem2);
-        SlideMenuItem menuItem3 = new SlideMenuItem(ContentFragment.PAINT, R.drawable.icn_3);
+        SlideMenuItem menuItem3 = new SlideMenuItem(ContentFragment.EXIT, R.drawable.icn_exit);
         list.add(menuItem3);
-        SlideMenuItem menuItem4 = new SlideMenuItem(ContentFragment.CASE, R.drawable.icn_4);
-        list.add(menuItem4);
-        SlideMenuItem menuItem5 = new SlideMenuItem(ContentFragment.SHOP, R.drawable.icn_5);
-        list.add(menuItem5);
-        SlideMenuItem menuItem6 = new SlideMenuItem(ContentFragment.PARTY, R.drawable.icn_6);
-        list.add(menuItem6);
-        SlideMenuItem menuItem7 = new SlideMenuItem(ContentFragment.MOVIE, R.drawable.icn_7);
-        list.add(menuItem7);
     }
 
     @Override
@@ -397,9 +389,11 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
     @Override
     public ScreenShotable onSwitch(Resourceble slideMenuItem, ScreenShotable screenShotable, int position) {
         switch (slideMenuItem.getName()) {
+            //关闭
             case ContentFragment.CLOSE:
                 return screenShotable;
-            case ContentFragment.BUILDING:
+                //切换主题
+            case ContentFragment.THEME:
                         isTheme_Light = prefer.getBoolean("isTheme_Light", true);
                         if (isTheme_Light) {
                             setTheme(R.style.ThemeDark);
@@ -412,6 +406,15 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                         editor.apply();
                         MainActivity.this.recreate();
                 drawerLayout_main.openDrawer(GravityCompat.START);
+                return screenShotable;
+                //关于
+            case ContentFragment.INREGARDTO:
+                Intent intent = new Intent(this, CopyrightActivity.class);
+                startActivity(intent);
+                return screenShotable;
+                //退出
+            case ContentFragment.EXIT:
+                finish();
                 return screenShotable;
             default:
 //                return replaceFragment(screenShotable, position);
