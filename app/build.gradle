@@ -42,4 +42,6 @@ dependencies {
     compile 'com.jrummyapps:colorpicker:2.1.6'
     compile 'com.github.yalantis:Side-Menu.Android:1.0.1'
     compile 'com.github.ozodrukh:CircularReveal:1.0.4'
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    compile 'com.google.code.gson:gson:2.8.2'
 }

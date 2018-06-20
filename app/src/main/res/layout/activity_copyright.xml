@@ -64,7 +64,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
-        android:text="橙子便签"
         android:textColor="?attr/color_text_title"
         android:textSize="18sp"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -76,7 +75,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
-        android:text="@string/version"
         android:textColor="?attr/color_text_title"
         android:textSize="18sp"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -145,8 +143,7 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_alignParentLeft="true"
-            android:paddingRight="10dp"
-            android:src="@mipmap/orangenote" />
+            android:paddingRight="10dp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -187,8 +184,7 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_alignParentLeft="true"
-            android:paddingRight="10dp"
-            android:src="@mipmap/orangenote" />
+            android:paddingRight="10dp" />
 
 
         <TextView

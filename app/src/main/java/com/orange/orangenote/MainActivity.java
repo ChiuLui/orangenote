@@ -2,11 +2,13 @@ package com.orange.orangenote;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.GravityCompat;
@@ -32,20 +34,28 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.fragment.ContentFragment;
+import com.orange.orangenote.json.CheckUpDate;
+import com.orange.orangenote.util.APKVersionCodeUtils;
 import com.orange.orangenote.util.DateUtil;
+import com.orange.orangenote.util.HttpUtil;
 import com.orange.orangenote.util.ThemeChangeUtil;
 import com.yalantis.phoenix.PullToRefreshView;
 
 import org.litepal.LitePal;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 import yalantis.com.sidemenu.interfaces.Resourceble;
 import yalantis.com.sidemenu.interfaces.ScreenShotable;
 import yalantis.com.sidemenu.model.SlideMenuItem;
@@ -182,17 +192,35 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
      */
     private static final String DEFAULT_PASSWORD = "ChiuLui";
 
-    private ScrollView scrollView_main;
-
+    /**
+     * 侧滑菜单布局
+     */
     private LinearLayout left_drawer_main;
 
+    /**
+     * 内容碎片(没用)
+     */
     private ContentFragment contentFragment;
 
+    /**
+     * 侧滑菜单list
+     */
     private List<SlideMenuItem> list = new ArrayList<>();
 
+    /**
+     * 侧滑菜单动画
+     */
     private ViewAnimator viewAnimator;
 
+    /**
+     * 控制home侧滑开关
+     */
     private ActionBarDrawerToggle drawerToggle;
+
+    /**
+     * 检查更新的毫秒值
+     */
+    private static long UpDateTimeStamp = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -333,13 +361,110 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         createMenuList();
         viewAnimator = new ViewAnimator<>(this, list, contentFragment, drawerLayout_main, this);
 
+        //检查更新
+        checkUpDate();
 
     }
 
+    /**
+     * 检查更新
+     */
+    private void checkUpDate() {
+        //检查更新(如果上次检查更新的毫秒值大于一天, 就检查更新)
+        UpDateTimeStamp = prefer.getLong("UpDateTimeStamp", 0);
+        //timeDifference(时间差)
+        long timeDifference = DateUtil.getTimeStamp() - UpDateTimeStamp;
+        Log.e("TAG", "时间差=" + timeDifference + " = " + DateUtil.getTimeStamp() + "-" + UpDateTimeStamp);
+        //如果 上次检查的毫秒值 和 当前的毫秒值 差 为一天就检查更新
+        if (timeDifference > 86400000) {
+            Toast.makeText(this, "检查更新", Toast.LENGTH_SHORT).show();
+            //保存这次的检查时间
+            editor.putLong("UpDateTimeStamp", DateUtil.getTimeStamp());
+            editor.apply();
+            //开始检查更新
+            HttpUtil.sendOkHttpRequest("http://www.wanandroid.com/tools/mockapi/6662/chiuluiorangenote", new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    //访问数据失败
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    //访问数据成功
+                    String responseText = response.body().string();
+                    Gson gson = new Gson();
+                    final CheckUpDate checkUpDate = gson.fromJson(responseText, CheckUpDate.class);
+                    if (checkUpDate.getName().equals(APKVersionCodeUtils.getAppName(MainActivity.this))) {
+
+                        if (checkUpDate.getVersion() <= APKVersionCodeUtils.getVersionCode(MainActivity.this)) {
+                            //无更新
+                        } else {
+                            //有更新
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    final AlertDialog dialog;
+                                    if (isTheme_Light) {
+                                        dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Light)
+                                                .setTitle("发现更新")
+                                                .setIcon(R.mipmap.orange_ylo)
+                                                .setMessage(checkUpDate.getContent())
+                                                .setPositiveButton("去更新", new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        Intent intent = new Intent();
+                                                        intent.setAction("android.intent.action.VIEW");
+                                                        Uri apk_url = Uri.parse(checkUpDate.getDownloadURL());
+                                                        intent.setData(apk_url);
+                                                        startActivity(intent);//打开浏览器
+                                                    }
+                                                })
+                                                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+
+                                                    }
+                                                })
+                                                .show();
+                                        changeDialogButtonColor(dialog);
+                                    } else {
+                                        dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Dark)
+                                                .setTitle("发现更新")
+                                                .setIcon(R.mipmap.orange_ylo)
+                                                .setMessage(checkUpDate.getContent())
+                                                .setPositiveButton("去更新", new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        Intent intent = new Intent();
+                                                        intent.setAction("android.intent.action.VIEW");
+                                                        Uri apk_url = Uri.parse(checkUpDate.getDownloadURL());
+                                                        intent.setData(apk_url);
+                                                        startActivity(intent);//打开浏览器
+                                                    }
+                                                })
+                                                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+
+                                                    }
+                                                })
+                                                .show();
+                                        changeDialogColor(MainActivity.this, dialog);
+                                    }
+                                }
+                            });
+                        }
+
+                    }
+                }
+            });
+        }
+    }
+
     private void createMenuList() {
-        SlideMenuItem menuItem0 = new SlideMenuItem(ContentFragment.CLOSE, isTheme_Light == true? R.drawable.icn_closedaytime : R.drawable.icn_closenight);
+        SlideMenuItem menuItem0 = new SlideMenuItem(ContentFragment.CLOSE, isTheme_Light == true ? R.drawable.icn_closedaytime : R.drawable.icn_closenight);
         list.add(menuItem0);
-        SlideMenuItem menuItem = new SlideMenuItem(ContentFragment.THEME, isTheme_Light == true? R.drawable.icn_night : R.drawable.icn_daytime);
+        SlideMenuItem menuItem = new SlideMenuItem(ContentFragment.THEME, isTheme_Light == true ? R.drawable.icn_night : R.drawable.icn_daytime);
         list.add(menuItem);
         SlideMenuItem menuItem2 = new SlideMenuItem(ContentFragment.INREGARDTO, R.drawable.icn_inregardto);
         list.add(menuItem2);
@@ -359,28 +484,9 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         drawerToggle.onConfigurationChanged(newConfig);
     }
 
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.menu_main, menu);
-//        return true;
-//    }
-
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        if (drawerToggle.onOptionsItemSelected(item)) {
-//            return true;
-//        }
-//        switch (item.getItemId()) {
-//            case R.id.action_settings:
-//                return true;
-//            default:
-//                return super.onOptionsItemSelected(item);
-//        }
-//    }
-
     /**
      * 监听滑动菜单点击
+     *
      * @param slideMenuItem
      * @param screenShotable
      * @param position
@@ -392,27 +498,27 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
             //关闭
             case ContentFragment.CLOSE:
                 return screenShotable;
-                //切换主题
+            //切换主题
             case ContentFragment.THEME:
-                        isTheme_Light = prefer.getBoolean("isTheme_Light", true);
-                        if (isTheme_Light) {
-                            setTheme(R.style.ThemeDark);
-                            isTheme_Light = false;
-                        } else {
-                            setTheme(R.style.ThemeLight);
-                            isTheme_Light = true;
-                        }
-                        editor.putBoolean("isTheme_Light", isTheme_Light);
-                        editor.apply();
-                        MainActivity.this.recreate();
+                isTheme_Light = prefer.getBoolean("isTheme_Light", true);
+                if (isTheme_Light) {
+                    setTheme(R.style.ThemeDark);
+                    isTheme_Light = false;
+                } else {
+                    setTheme(R.style.ThemeLight);
+                    isTheme_Light = true;
+                }
+                editor.putBoolean("isTheme_Light", isTheme_Light);
+                editor.apply();
+                MainActivity.this.recreate();
                 drawerLayout_main.openDrawer(GravityCompat.START);
                 return screenShotable;
-                //关于
+            //关于
             case ContentFragment.INREGARDTO:
                 Intent intent = new Intent(this, CopyrightActivity.class);
                 startActivity(intent);
                 return screenShotable;
-                //退出
+            //退出
             case ContentFragment.EXIT:
                 finish();
                 return screenShotable;
@@ -459,7 +565,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         if (isTheme_Light) {
             dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Light)
                     .setTitle("创建密码")
-                    .setIcon(R.mipmap.orangenote_circle)
+                    .setIcon(R.mipmap.orange_ylo)
                     .setMessage("创建用于访问 私密便签 的密码.")
                     .setView(view)
                     .setPositiveButton("确定", new DialogInterface.OnClickListener() {
@@ -495,7 +601,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         } else {
             dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Dark)
                     .setTitle("创建密码")
-                    .setIcon(R.mipmap.orangenote_circle)
+                    .setIcon(R.mipmap.orange_ylo)
                     .setMessage("创建用于访问 私密便签 的密码.")
                     .setView(view)
                     .setPositiveButton("确定", new DialogInterface.OnClickListener() {
@@ -527,7 +633,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                         }
                     })
                     .show();
-            changeDialogColor(dialog);
+            changeDialogColor(MainActivity.this, dialog);
         }
     }
 
@@ -541,7 +647,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         if (isTheme_Light) {
             dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Light)
                     .setTitle("输入密码")
-                    .setIcon(R.mipmap.orangenote_circle)
+                    .setIcon(R.mipmap.orange_ylo)
                     .setMessage("请输入您设置的私密便签密码.")
                     .setView(view)
                     .setPositiveButton("确定", new DialogInterface.OnClickListener() {
@@ -574,7 +680,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         } else {
             dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Dark)
                     .setTitle("输入密码")
-                    .setIcon(R.mipmap.orangenote_circle)
+                    .setIcon(R.mipmap.orange_ylo)
                     .setMessage("请输入您设置的私密便签密码.")
                     .setView(view)
                     .setPositiveButton("确定", new DialogInterface.OnClickListener() {
@@ -603,7 +709,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                         }
                     })
                     .show();
-            changeDialogColor(dialog);
+            changeDialogColor(MainActivity.this, dialog);
         }
 
     }
@@ -620,7 +726,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         if (isTheme_Light) {
             dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Light)
                     .setTitle("请输入您的旧密码")
-                    .setIcon(R.mipmap.orangenote_circle)
+                    .setIcon(R.mipmap.orange_ylo)
                     .setMessage("请输入您设置的私密便签密码.")
                     .setView(view)
                     .setPositiveButton("设置新密码", new DialogInterface.OnClickListener() {
@@ -647,14 +753,14 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
 
                             dialogdelete[0] = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Light)
                                     .setTitle("忘记密码")
-                                    .setIcon(R.mipmap.orangenote_circle)
+                                    .setIcon(R.mipmap.orange_ylo)
                                     .setMessage("点击确定:\n清除所有私密便签并且重置密码.")
                                     .setPositiveButton("确定", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialogdelete2[0] = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Light)
                                                     .setTitle("删除私密便签并重置密码")
-                                                    .setIcon(R.mipmap.orangenote_circle)
+                                                    .setIcon(R.mipmap.orange_ylo)
                                                     .setPositiveButton("重置", new DialogInterface.OnClickListener() {
                                                         @Override
                                                         public void onClick(DialogInterface dialog, int which) {
@@ -695,7 +801,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         } else {
             dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Dark)
                     .setTitle("请输入您的旧密码")
-                    .setIcon(R.mipmap.orangenote_circle)
+                    .setIcon(R.mipmap.orange_ylo)
                     .setMessage("请输入您设置的私密便签密码.")
                     .setView(view)
                     .setPositiveButton("设置新密码", new DialogInterface.OnClickListener() {
@@ -721,14 +827,14 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                         public void onClick(DialogInterface dialog, int which) {
                             dialogdelete[0] = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Dark)
                                     .setTitle("忘记密码")
-                                    .setIcon(R.mipmap.orangenote_circle)
+                                    .setIcon(R.mipmap.orange_ylo)
                                     .setMessage("点击确定:\n清除所有私密便签并且重置密码.")
                                     .setPositiveButton("确定", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialogdelete2[0] = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog_Dark)
                                                     .setTitle("删除私密便签并重置密码")
-                                                    .setIcon(R.mipmap.orangenote_circle)
+                                                    .setIcon(R.mipmap.orange_ylo)
                                                     .setPositiveButton("重置", new DialogInterface.OnClickListener() {
                                                         @Override
                                                         public void onClick(DialogInterface dialog, int which) {
@@ -751,7 +857,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                                                         }
                                                     })
                                                     .show();
-                                            changeDialogColor(dialogdelete2[0]);
+                                            changeDialogColor(MainActivity.this, dialogdelete2[0]);
                                         }
                                     })
                                     .setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -761,11 +867,11 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                                         }
                                     })
                                     .show();
-                            changeDialogColor(dialogdelete[0]);
+                            changeDialogColor(MainActivity.this, dialogdelete[0]);
                         }
                     })
                     .show();
-            changeDialogColor(dialog);
+            changeDialogColor(MainActivity.this, dialog);
         }
     }
 
@@ -774,7 +880,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
      *
      * @param dialog
      */
-    private void changeDialogButtonColor(AlertDialog dialog) {
+    public static void changeDialogButtonColor(AlertDialog dialog) {
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.parseColor("#F9d43a"));
         dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(Color.parseColor("#F9d43a"));
         dialog.getButton(DialogInterface.BUTTON_NEUTRAL).setTextColor(Color.parseColor("#F9d43a"));
@@ -785,7 +891,7 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
      *
      * @param dialog
      */
-    private void changeDialogColor(DialogInterface dialog) {
+    public static void changeDialogColor(Context context, DialogInterface dialog) {
         try {
             Field mAlert = AlertDialog.class.getDeclaredField("mAlert");
             mAlert.setAccessible(true);
@@ -793,12 +899,12 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
             Field mMessage = mAlertController.getClass().getDeclaredField("mMessageView");
             mMessage.setAccessible(true);
             TextView mMessageView = (TextView) mMessage.get(mAlertController);
-            mMessageView.setTextColor(MainActivity.this.getResources().getColor(R.color.color_text_title_Dark));
+            mMessageView.setTextColor(context.getResources().getColor(R.color.color_text_title_Dark));
 
             Field mTitle = mAlertController.getClass().getDeclaredField("mTitleView");
             mTitle.setAccessible(true);
             TextView mTitleView = (TextView) mTitle.get(mAlertController);
-            mTitleView.setTextColor(MainActivity.this.getResources().getColor(R.color.color_text_title_Dark));
+            mTitleView.setTextColor(context.getResources().getColor(R.color.color_text_title_Dark));
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (NoSuchFieldException e) {
