@@ -1,5 +1,6 @@
 package com.orange.orangenote;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -22,12 +23,17 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -62,7 +68,7 @@ import yalantis.com.sidemenu.model.SlideMenuItem;
 import yalantis.com.sidemenu.util.ViewAnimator;
 
 
-public class MainActivity extends AppCompatActivity implements ViewAnimator.ViewAnimatorListener {
+public class MainActivity extends AppCompatActivity implements ViewAnimator.ViewAnimatorListener, View.OnLayoutChangeListener {
 
     /**
      * 滑动菜单
@@ -222,6 +228,19 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
      */
     private static long UpDateTimeStamp = 0;
 
+    private EditText edit_main_search;
+
+    /**
+     * 屏幕高度
+     */
+    private int screenHeight = 0;
+
+    /**
+     * 软件盘弹起后所占高度阀值
+     */
+    private int keyHeight = 0;
+
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -230,6 +249,13 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         isTheme_Light = prefer.getBoolean("isTheme_Light", true);
         ThemeChangeUtil.changeTheme(this, isTheme_Light);
         setContentView(R.layout.activity_main);
+
+        //获取屏幕高度
+        screenHeight = this.getWindowManager().getDefaultDisplay().getHeight();
+        //阀值设置为屏幕高度的1/3
+        keyHeight = screenHeight / 3;
+
+        edit_main_search = findViewById(R.id.edit_main_search);
 
         isListView = prefer.getBoolean("isListView", true);
         Password = prefer.getString("Password", null);
@@ -258,6 +284,41 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
             actionBar.setLogo(isTheme_Light == true ? R.mipmap.orange_ylo : R.mipmap.orange_ylo);
             actionBar.setTitle("Note");
         }
+
+        edit_main_search.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // 输入前的监听
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // 输入的内容变化的监听
+                    //查询倒序
+                    noteList = LitePal.where("isSecret = ?", "0").order("timeStamp desc").find(Note.class);
+                    List<Note> searchNotes = new ArrayList<>();
+                    for (Note note : noteList) {
+                        if (note.getContent().indexOf(edit_main_search.getText().toString()) != -1) {
+                            searchNotes.add(note);
+                        }
+                    }
+                    noteList = searchNotes;
+                    adapter = new NoteAdapter(MainActivity.this, noteList);
+                    recyclerView.setAdapter(adapter);
+                    adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // 输入后的监听
+            }
+        });
+
+//        edit_main_search.setFocusable(false);
+//        edit_main_search.setFocusableInTouchMode(false);
+//        edit_main_search.setCursorVisible(false);
+//        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+//        imm.hideSoftInputFromWindow(getWindow().getDecorView().getWindowToken(), 0);
 
         /**
          * 下拉刷新回调
@@ -1113,13 +1174,44 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
     @Override
     protected void onResume() {
         super.onResume();
+        drawerLayout_main.addOnLayoutChangeListener(this);
         recordAdapter();
+    }
+
+    /**
+     * 监听布局改变(监听软键盘)
+     *
+     * @param v
+     * @param left
+     * @param top
+     * @param right
+     * @param bottom
+     * @param oldLeft
+     * @param oldTop
+     * @param oldRight
+     * @param oldBottom
+     */
+    @Override
+    public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                               int oldLeft, int oldTop, int oldRight, int oldBottom) {
+        //现在认为只要控件将Activity向上推的高度超过了1/3屏幕高，就认为软键盘弹起
+        if (oldBottom != 0 && bottom != 0 && (oldBottom - bottom > keyHeight)) {
+            //软键盘开启
+            edit_main_search.setCursorVisible(true);
+        } else if (oldBottom != 0 && bottom != 0 && (bottom - oldBottom > keyHeight)) {
+            //软键盘关闭
+            edit_main_search.setCursorVisible(false);
+        }
+
     }
 
     /**
      * 刷新适配器
      */
     private void recordAdapter() {
+
+        edit_main_search.setText("");
+        edit_main_search.setCursorVisible(false);
 
         //查询倒序
         noteList = LitePal.where("isSecret = ?", "0").order("timeStamp desc").find(Note.class);
@@ -1168,6 +1260,9 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
      */
     private void exitDeleteMode() {
         if (isDelete) {
+            //清空内容&隐藏光标
+            edit_main_search.setText("");
+            edit_main_search.setCursorVisible(false);
             isDelete = false;
             deleteNote.clear();
             isAllCheck = isAllCheck_NORMAL;

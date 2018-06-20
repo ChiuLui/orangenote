@@ -245,7 +245,7 @@ public class SecretActivity extends AppCompatActivity {
                 break;
             //私密
             case R.id.secret_toolbar:
-                Toast.makeText(this, "设为私密", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "取消私密", Toast.LENGTH_SHORT).show();
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
                     //遍历待删除列表 取消私密便签
@@ -262,7 +262,7 @@ public class SecretActivity extends AppCompatActivity {
                 break;
             //置顶
             case R.id.top_toolbar:
-                Toast.makeText(this, "点击置顶按钮", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "置顶", Toast.LENGTH_SHORT).show();
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
                     //遍历待删除列表 增加毫秒值

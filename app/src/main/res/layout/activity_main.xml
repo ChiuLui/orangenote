@@ -13,7 +13,9 @@
 
         <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:focusableInTouchMode="true">
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar_main"
@@ -26,6 +28,28 @@
                 app:layout_scrollFlags="scroll|enterAlways|snap">
 
             </android.support.v7.widget.Toolbar>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="10dp">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/search"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="10dp"/>
+
+                <EditText
+                    android:id="@+id/edit_main_search"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/color_bg_item"
+                    android:layout_marginRight="20dp"
+                    android:textColor="?attr/color_text_content"/>
+            </LinearLayout>
 
         </android.support.design.widget.AppBarLayout>
 
