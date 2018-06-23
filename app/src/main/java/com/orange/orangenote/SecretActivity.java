@@ -245,9 +245,9 @@ public class SecretActivity extends AppCompatActivity {
                 break;
             //私密
             case R.id.secret_toolbar:
-                Toast.makeText(this, "取消私密", Toast.LENGTH_SHORT).show();
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
+                    Toast.makeText(this, "将 "+ deleteNote.size() +" 条便签解除私密", Toast.LENGTH_SHORT).show();
                     //遍历待删除列表 取消私密便签
                     for (Note note : deleteNote) {
                         note.setSecret(false);
@@ -262,19 +262,18 @@ public class SecretActivity extends AppCompatActivity {
                 break;
             //置顶
             case R.id.top_toolbar:
-                Toast.makeText(this, "置顶", Toast.LENGTH_SHORT).show();
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
                     //遍历待删除列表 增加毫秒值
                     for (Note note : deleteNote) {
                         if (note.isTop() && isTop) {
+                            Toast.makeText(this, "将 "+ deleteNote.size() +" 条便签取消置顶", Toast.LENGTH_SHORT).show();
                             note.setTop(false);
-                            Log.e("TAG", "原本毫秒值" + note.getTimeStamp());
                             note.setTimeStamp(note.getTimeStamp() - ADDTIMESTAMP);
                             note.save();
                         } else if (!(note.isTop()) && !(isTop)) {
+                            Toast.makeText(this, "将 "+ deleteNote.size() +" 条便签设为置顶", Toast.LENGTH_SHORT).show();
                             note.setTop(true);
-                            Log.e("TAG", "原本毫秒值" + note.getTimeStamp());
                             note.setTimeStamp(note.getTimeStamp() + ADDTIMESTAMP);
                             note.save();
                         }
@@ -324,15 +323,14 @@ public class SecretActivity extends AppCompatActivity {
      * @param deleteNote 要删除的便签列表
      */
     private void deleteNoteList(List<Note> deleteNote) {
+        Toast.makeText(this, "删除 " + deleteNote.size() + " 条便签", Toast.LENGTH_SHORT).show();
         //遍历待删除列表
         for (Note note : deleteNote) {
             //如果插入了图片
             List<NoteImagePath> noteImagePaths = LitePal.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);
             if (!(noteImagePaths.isEmpty())) {
-                Toast.makeText(SecretActivity.this, "如果返回图片list不为空: ", Toast.LENGTH_SHORT).show();
                 //循环删除当前NoteId下的图片文件
                 for (NoteImagePath path : noteImagePaths) {
-                    Toast.makeText(SecretActivity.this, "删除图片: " + path.getImagePath(), Toast.LENGTH_SHORT).show();
                     File file = new File(path.getImagePath());
                     file.delete();
                 }
@@ -367,19 +365,8 @@ public class SecretActivity extends AppCompatActivity {
      * 刷新适配器
      */
     private void recordAdapter() {
-//        noteList = DataSupport.where("isSecret = ?", true + "").order("timeStamp desc").find(Note.class);
-//        noteList = DataSupport.findAll(Note.class);
         //查询倒序
         noteList = LitePal.where("isSecret = ?", "1").order("timeStamp desc").find(Note.class);
-        for (Note note : noteList){
-            Log.e("TAG", "-------------------------------------------- " );
-            Log.e("TAG", "id = " + note.getId() );
-            Log.e("TAG", "title = " + note.getTime() );
-            Log.e("TAG", "content = " + note.getContent() );
-            Log.e("TAG", "isSecret = " + note.isSecret() );
-            Log.e("TAG", "isTop = " + note.isTop() );
-            Log.e("TAG", "isRemind = " + note.isRemind() );
-        }
         adapter = new SecretAdapter(SecretActivity.this, this.noteList);
         recyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();

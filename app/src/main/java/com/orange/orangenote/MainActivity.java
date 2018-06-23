@@ -24,19 +24,15 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,6 +41,7 @@ import com.orange.orangenote.db.Note;
 import com.orange.orangenote.db.NoteImagePath;
 import com.orange.orangenote.fragment.ContentFragment;
 import com.orange.orangenote.json.CheckUpDate;
+import com.orange.orangenote.json.FirstOpen;
 import com.orange.orangenote.util.APKVersionCodeUtils;
 import com.orange.orangenote.util.DateUtil;
 import com.orange.orangenote.util.HttpUtil;
@@ -270,7 +267,6 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
 
         mPullToRefreshView = findViewById(R.id.pull_to_refresh);
 
-
         //设置toolbar和Actionbar一样效果
         setSupportActionBar(toolbar_main);
         //得到ActionBar的实例
@@ -294,18 +290,18 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 // 输入的内容变化的监听
-                    //查询倒序
-                    noteList = LitePal.where("isSecret = ?", "0").order("timeStamp desc").find(Note.class);
-                    List<Note> searchNotes = new ArrayList<>();
-                    for (Note note : noteList) {
-                        if (note.getContent().indexOf(edit_main_search.getText().toString()) != -1) {
-                            searchNotes.add(note);
-                        }
+                //查询倒序
+                noteList = LitePal.where("isSecret = ?", "0").order("timeStamp desc").find(Note.class);
+                List<Note> searchNotes = new ArrayList<>();
+                for (Note note : noteList) {
+                    if (note.getContent().indexOf(edit_main_search.getText().toString()) != -1) {
+                        searchNotes.add(note);
                     }
-                    noteList = searchNotes;
-                    adapter = new NoteAdapter(MainActivity.this, noteList);
-                    recyclerView.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
+                }
+                noteList = searchNotes;
+                adapter = new NoteAdapter(MainActivity.this, noteList);
+                recyclerView.setAdapter(adapter);
+                adapter.notifyDataSetChanged();
             }
 
             @Override
@@ -313,12 +309,6 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                 // 输入后的监听
             }
         });
-
-//        edit_main_search.setFocusable(false);
-//        edit_main_search.setFocusableInTouchMode(false);
-//        edit_main_search.setCursorVisible(false);
-//        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-//        imm.hideSoftInputFromWindow(getWindow().getDecorView().getWindowToken(), 0);
 
         /**
          * 下拉刷新回调
@@ -422,9 +412,70 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         createMenuList();
         viewAnimator = new ViewAnimator<>(this, list, contentFragment, drawerLayout_main, this);
 
+        //是否为第一次打开
+        if (prefer.getBoolean("isFirstOpen", true)) {
+            //创建说明文档
+            createFirstNote();
+            //保存这次的检查时间
+            editor.putBoolean("isFirstOpen", false);
+            editor.apply();
+        }
+
         //检查更新
         checkUpDate();
 
+    }
+
+    /**
+     * 创建第一条便签
+     */
+    private void createFirstNote() {
+        HttpUtil.sendOkHttpRequest("http://www.wanandroid.com/tools/mockapi/6662/chiuluiorangenoteFirstOpen", new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                //访问数据失败
+                Note note = new Note();
+                note.setYear(DateUtil.getNowYear());
+                note.setDate(DateUtil.getNowDate());
+                note.setTime(DateUtil.getNowTiem());
+                note.setTimeStamp(DateUtil.getTimeStamp());
+                note.setContent("<div style=\"text-align: center;\"><b><font size=\"6\" style=\"color: rgb(255, 152, 0);\">使用说明</font></b></div><div style=\"text-align: center;\"><b><font size=\"6\" style=\"color: rgb(255, 152, 0);\"><br></font></b></div><ul><li style=\"font-weight: bold;\"><font size=\"5\"><b>主页面</b>：</font></li></ul><span style=\"background-color: rgb(255, 255, 0);\">搜索框：</span><span style=\"background-color: rgb(255, 255, 255);\">输入关键字搜索便签。</span><br><span style=\"background-color: rgb(255, 255, 0);\">长按便签</span>➡️进入编辑模式。<br>编辑模式：<br><ol><li>\uD83D\uDD12设为私密便签（在私密便签页面\uD83D\uDD13解除私密）</li><li>\uD83D\uDCE4置顶便签</li><li>\uD83D\uDDD1️删除便签</li><li>☑️全选便签</li></ol>\uD83D\uDE0F在编辑模式下点击条目选中才能才能使用哟～<br><br><span style=\"background-color: rgb(255, 255, 0);\">下拉</span>➡️进入私密便签页面。<br>\uD83D\uDD10第一次进入需创建密码。可以在主页面设置便签为私密便签，也可以在私密便签页面创建您的私密便签。<br><br><span style=\"background-color: rgb(255, 255, 0);\">侧滑</span>➡️打开菜单页面。<br>在菜单页面<br><ol><li>\uD83C\uDF1E\uD83C\uDF1A白天、黑夜主题切换</li><li>⚠️关于：可以在关于页面获取更新等信息。<br></li><li>\uD83C\uDFC3退出</li></ol><ul><li><b><font size=\"5\">便签页面：</font></b><br></li></ul>页面右上角分别是<br><ol><li>⏰设置提醒：❗当后台被杀有可能会提醒失效。</li><li>\uD83D\uDDD1️清空页面内容。</li></ol>调出键盘同时会弹出<span style=\"color: rgb(255, 235, 59);\">可左右滑动</span>的工具栏。<br><span style=\"background-color: rgb(255, 255, 255); color: rgb(255, 128, 128);\">工具栏功能</span>：撤回、重构、插入图片、居中、<b>粗体</b>、<i>斜体</i>、<u>下划线</u>、<font size=\"5\">字体大小</font>、<span style=\"color: rgb(103, 58, 183);\">字体颜色</span>、<span style=\"background-color: rgb(255, 255, 0);\">高<span style=\"color: rgb(103, 58, 183);\">亮</span></span>、<a href=\"\" title=\"\">链接</a>、无序任务条目、有序任务条目、<input type=\"checkbox\" name=\"1529659953079\" value=\"1529659953079\">&nbsp; 多选框。");
+                note.save();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        recordAdapter();
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                //访问数据成功
+                String responseText = response.body().string();
+                Gson gson = new Gson();
+                FirstOpen firstOpen = gson.fromJson(responseText, FirstOpen.class);
+                Note note = new Note();
+                note.setYear(DateUtil.getNowYear());
+                note.setDate(DateUtil.getNowDate());
+                note.setTime(DateUtil.getNowTiem());
+                note.setTimeStamp(DateUtil.getTimeStamp());
+                note.setContent("<div style=\"text-align: center;\"><b><font size=\"6\" style=\"color: rgb(255, 152, 0);\">使用说明</font></b></div><div style=\"text-align: center;\"><b><font size=\"6\" style=\"color: rgb(255, 152, 0);\"><br></font></b></div><ul><li style=\"font-weight: bold;\"><font size=\"5\"><b>主页面</b>：</font></li></ul><span style=\"background-color: rgb(255, 255, 0);\">搜索框：</span><span style=\"background-color: rgb(255, 255, 255);\">输入关键字搜索便签。<br></span><span style=\"background-color: rgb(255, 255, 0);\">切换视图：</span><span style=\"background-color: rgb(255, 255, 255);\">点击页面右上角切换视图按钮：<br><ul><li>\uD83D\uDCD1列表视图</li><li>\uD83D\uDCF0瀑布流视图<br></li></ul></span><span style=\"background-color: rgb(255, 255, 0);\">长按便签</span>➡️进入编辑模式。<br>编辑模式：<br><ol><li>\uD83D\uDD12设为私密便签（在私密便签页面\uD83D\uDD13解除私密）</li><li>\uD83D\uDCE4置顶便签</li><li>\uD83D\uDDD1️删除便签</li><li>☑️全选便签</li></ol>\uD83D\uDE0F在编辑模式下点击条目选中才能才能使用哟～<br><br><span style=\"background-color: rgb(255, 255, 0);\">下拉</span>➡️进入私密便签页面。<br>\uD83D\uDD10第一次进入需创建密码。可以在主页面设置便签为私密便签，也可以在私密便签页面创建您的私密便签。<br><br><span style=\"background-color: rgb(255, 255, 0);\">侧滑</span>➡️打开菜单页面。<br>在菜单页面<br><ol><li>\uD83C\uDF1E\uD83C\uDF1A白天、黑夜主题切换</li><li>⚠️关于：可以在关于页面获取更新等信息。<br></li><li>\uD83C\uDFC3退出</li></ol><ul><li><b><font size=\"5\">便签页面：</font></b><br></li></ul>页面右上角分别是<br><ol><li>⏰设置提醒：❗当后台被杀有可能会提醒失效。</li><li>\uD83D\uDDD1️清空页面内容。</li></ol>调出键盘同时会弹出<span style=\"color: rgb(255, 235, 59);\">可左右滑动</span>的工具栏。<br><span style=\"background-color: rgb(255, 255, 255); color: rgb(255, 128, 128);\">工具栏功能</span>：撤回、重构、插入图片、居中、<b>粗体</b>、<i>斜体</i>、<u>下划线</u>、<font size=\"5\">字体大小</font>、<span style=\"color: rgb(103, 58, 183);\">字体颜色</span>、<span style=\"background-color: rgb(255, 255, 0);\">高<span style=\"color: rgb(103, 58, 183);\">亮</span></span>、<a href=\"\" title=\"\">链接</a>、无序任务条目、有序任务条目、<input type=\"checkbox\" name=\"1529659953079\" value=\"1529659953079\">&nbsp; 多选框。<br><div style=\"text-align: center;\"><b><font size=\"5\" style=\"color: rgb(255, 169, 42);\">附一张我老婆的美照</font></b></div><img src=\"" +
+                        firstOpen.getImagePath() +
+                        "\" alt=\"GAKKI\" width=\"320px\"><br>\n");
+                note.save();
+                NoteImagePath noteImagePath = new NoteImagePath();
+                noteImagePath.setNoteId(note.getId());
+                noteImagePath.setImagePath(firstOpen.getImagePath());
+                noteImagePath.save();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        recordAdapter();
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -435,10 +486,8 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
         UpDateTimeStamp = prefer.getLong("UpDateTimeStamp", 0);
         //timeDifference(时间差)
         long timeDifference = DateUtil.getTimeStamp() - UpDateTimeStamp;
-        Log.e("TAG", "时间差=" + timeDifference + " = " + DateUtil.getTimeStamp() + "-" + UpDateTimeStamp);
         //如果 上次检查的毫秒值 和 当前的毫秒值 差 为一天就检查更新
         if (timeDifference > 86400000) {
-            Toast.makeText(this, "检查更新", Toast.LENGTH_SHORT).show();
             //保存这次的检查时间
             editor.putLong("UpDateTimeStamp", DateUtil.getTimeStamp());
             editor.apply();
@@ -584,7 +633,6 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                 finish();
                 return screenShotable;
             default:
-//                return replaceFragment(screenShotable, position);
                 return screenShotable;
         }
     }
@@ -606,15 +654,6 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
     public void addViewToContainer(View view) {
         left_drawer_main.addView(view);
     }
-
-//    @Override
-//    public void onBackPressed() {
-//        super.onBackPressed();
-//        Intent mIntent = new Intent(this, MainActivity.class);
-//        mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-//        startActivity(mIntent);
-//        finish();
-//    }
 
     /**
      * 创建密码dialog
@@ -639,7 +678,6 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                                     Toast.makeText(MainActivity.this, "您输入的密码不一致", Toast.LENGTH_SHORT).show();
                                     createPassword();
                                 } else if (password.getText().toString().equals(passwordagain.getText().toString()) || (password.getText().toString()) == (passwordagain.getText().toString())) {
-                                    Log.e("TAG", "创建密码: " + "password.getText()=" + password.getText() + "   passwordagain.getText()=" + passwordagain.getText());
                                     editor.putString("Password", password.getText().toString());
                                     editor.apply();
                                     //更新后重新赋值密码
@@ -647,7 +685,6 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                                     Intent intent = new Intent(MainActivity.this, SecretActivity.class);
                                     startActivity(intent);
                                 }
-                                Log.e("TAG", "创建密码: " + "password.getText()=" + password.getText() + "   passwordagain.getText()=" + passwordagain.getText());
                             }
                         }
                     })
@@ -675,7 +712,6 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                                     Toast.makeText(MainActivity.this, "您输入的密码不一致", Toast.LENGTH_SHORT).show();
                                     createPassword();
                                 } else if (password.getText().toString().equals(passwordagain.getText().toString()) || (password.getText().toString()) == (passwordagain.getText().toString())) {
-                                    Log.e("TAG", "创建密码: " + "password.getText()=" + password.getText() + "   passwordagain.getText()=" + passwordagain.getText());
                                     editor.putString("Password", password.getText().toString());
                                     editor.apply();
                                     //更新后重新赋值密码
@@ -683,7 +719,6 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                                     Intent intent = new Intent(MainActivity.this, SecretActivity.class);
                                     startActivity(intent);
                                 }
-                                Log.e("TAG", "创建密码: " + "password.getText()=" + password.getText() + "   passwordagain.getText()=" + passwordagain.getText());
                             }
                         }
                     })
@@ -1060,10 +1095,10 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                 break;
             //私密
             case R.id.secret_toolbar:
-                Toast.makeText(this, "设为私密", Toast.LENGTH_SHORT).show();
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
                     //遍历待删除列表 设为私密便签
+                    Toast.makeText(this, "将 " + deleteNote.size() + " 条便签设为私密", Toast.LENGTH_SHORT).show();
                     for (Note note : deleteNote) {
                         note.setSecret(true);
                         note.save();
@@ -1077,19 +1112,18 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                 break;
             //置顶
             case R.id.top_toolbar:
-                Toast.makeText(this, "点击置顶按钮", Toast.LENGTH_SHORT).show();
                 //如果待删除数组不为空
                 if (deleteNote != null && deleteNote.size() > 0) {
                     //遍历待删除列表 增加毫秒值
                     for (Note note : deleteNote) {
                         if (note.isTop() && isTop) {
+                            Toast.makeText(this, "将 " + deleteNote.size() + " 条便签取消置顶", Toast.LENGTH_SHORT).show();
                             note.setTop(false);
-                            Log.e("TAG", "原本毫秒值" + note.getTimeStamp());
                             note.setTimeStamp(note.getTimeStamp() - ADDTIMESTAMP);
                             note.save();
                         } else if (!(note.isTop()) && !(isTop)) {
+                            Toast.makeText(this, "将 " + deleteNote.size() + " 条便签设为置顶", Toast.LENGTH_SHORT).show();
                             note.setTop(true);
-                            Log.e("TAG", "原本毫秒值" + note.getTimeStamp());
                             note.setTimeStamp(note.getTimeStamp() + ADDTIMESTAMP);
                             note.save();
                         }
@@ -1139,15 +1173,16 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
      * @param deleteNote 要删除的便签列表
      */
     private void deleteNoteList(List<Note> deleteNote) {
+        Toast.makeText(this, "删除 " + deleteNote.size() + " 条便签", Toast.LENGTH_SHORT).show();
         //遍历待删除列表
         for (Note note : deleteNote) {
             //如果插入了图片
             List<NoteImagePath> noteImagePaths = LitePal.where("noteId = ?", note.getId() + "").find(NoteImagePath.class);
             if (!(noteImagePaths.isEmpty())) {
-                Toast.makeText(MainActivity.this, "如果返回图片list不为空: ", Toast.LENGTH_SHORT).show();
+                //如果返回图片list不为空:
                 //循环删除当前NoteId下的图片文件
                 for (NoteImagePath path : noteImagePaths) {
-                    Toast.makeText(MainActivity.this, "删除图片: " + path.getImagePath(), Toast.LENGTH_SHORT).show();
+                    //删除图片(未实现)
                     File file = new File(path.getImagePath());
                     file.delete();
                 }
@@ -1225,6 +1260,11 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
             recyclerView.setLayoutManager(linearLayoutManager);
             recyclerView.setLayoutManager(staggeredGridLayoutManager);
         }
+
+       for (Note note : noteList) {
+           Log.e("TAG", "!!!!!!!!!!!!内容=" + note.getContent());
+       }
+
     }
 
     /**

@@ -224,7 +224,7 @@ class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.ViewHolder> {
             }
         }
         //判断如果内容包含图片,则显示图片设置图片
-        if (note.getContent().indexOf("/storage/emulated/0/Pictures/") != -1) {
+        if (note.getContent().indexOf("/storage/emulated/0/Pictures/") != -1 || note.getContent().indexOf("<img src=") != -1) {
             List<NoteImagePath> noteImagePaths = LitePal.where("noteId = ?", note.getId() + "").order("id desc").find(NoteImagePath.class);
             if (!(noteImagePaths.isEmpty())) {
                 for (NoteImagePath noteImagePath : noteImagePaths) {

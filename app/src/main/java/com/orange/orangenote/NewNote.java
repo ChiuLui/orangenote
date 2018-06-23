@@ -30,6 +30,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -49,6 +50,7 @@ import com.jrummyapps.android.colorpicker.ColorPickerDialog;
 import com.jrummyapps.android.colorpicker.ColorPickerDialogListener;
 import com.orange.orangenote.db.Note;
 import com.orange.orangenote.db.NoteImagePath;
+import com.orange.orangenote.util.ContentUtil;
 import com.orange.orangenote.util.DateUtil;
 import com.orange.orangenote.util.StringToAscii;
 import com.orange.orangenote.util.ThemeChangeUtil;
@@ -62,6 +64,7 @@ import org.litepal.LitePal;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -338,6 +341,10 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
         richText.setOnTextChangeListener(new RichEditor.OnTextChangeListener() {
             @Override
             public void onTextChange(String text) {
+                //调整图片尺寸
+                if (text.indexOf("alt=\"insertImage\">") != -1) {
+                    richText.setHtml(ContentUtil.replaceContent(text, "alt=\"insertImage\">", "alt=\"insertImage\" width=\"320px\">"));
+                }
                 //内容有改变就显示撤回按钮
                 imgbtn_break.setVisibility(View.VISIBLE);
                 //没有改变就隐藏撤回和重构按钮
@@ -363,7 +370,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                         for (NoteImagePath imagePath : noteImagePaths) {
                             //没有就从列表中删除
                             if (text.indexOf(imagePath.getImagePath()) == -1) {
-                                Toast.makeText(NewNote.this, "删除图片", Toast.LENGTH_SHORT).show();
                                 imagePath.delete();
                             }
                         }
@@ -467,14 +473,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
      */
     private void saveToDatabast() {
         //如果数据现在的数据和传过来的数据不一样(修改了)而且不为null, 就保存数据.
-        int i = StringToAscii.stringToAscii(nowContent);
-        int j = StringToAscii.stringToAscii(richText.getHtml());
-        boolean result = (i != j);
-        Log.e("TAG", "!!!!!!!!!!!!!!!!!!!!!!!!nowContent=" + nowContent);
-        Log.e("TAG", "!!!!!!!!!!!!!!!!!!!!!!!!richText.getHtml()=" + richText.getHtml());
-        Log.e("TAG", "!!!!!!!!!!!!!!!!!!!!!!!!(StringToAscii.stringToAscii(nowContent))=" + i);
-        Log.e("TAG", "!!!!!!!!!!!!!!!!!!!!!!!!(StringToAscii.stringToAscii(richText.getHtml()))=" + j);
-        Log.e("TAG", "!!!!!!!!!!!!!!!!!!!!!!!!((StringToAscii.stringToAscii(nowContent)) != (StringToAscii.stringToAscii(richText.getHtml())))=" + result);
         if (((StringToAscii.stringToAscii(nowContent)) != (StringToAscii.stringToAscii(richText.getHtml())))
                 && ((richText.getHtml()).length() > 0)
                 && !(richText.getHtml().isEmpty())
@@ -518,8 +516,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
             nowContent = note.getContent();
             //把保存标志改变
             isSave = true;
-            Log.e("TAG", "-----------------保存内容richText.getHtml() :" + richText.getHtml());
-            Log.e("TAG", "-----------------保存内容note.getContent() :" + note.getContent());
         }
         //如果旧便签修改了变成空便签, 就从数据库删除
         if ((richText.getHtml()).length() <= 0 || richText.getHtml().equals("") || richText.getHtml() == null || richText.getHtml().equals(" ") || richText.getHtml().equals("\n") || (richText.getHtml().equals("<br><br>")) || (richText.getHtml().equals("&nbsp;"))) {
@@ -528,7 +524,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
             }
             LitePal.deleteAll(Note.class, "id = ?", nowId + "");
         }
-        Log.e("TAG", "当前时间毫秒值 = " + DateUtil.getTimeStamp());
     }
 
     /**
@@ -633,7 +628,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                 InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(richText.getWindowToken(), 0);
                 richText.setHtml("");//置空
-//                editText.setCursorVisible(false);//取消光标
                 //设置Snackbar事件, 增加用户友好
                 Snackbar.make(collapsingToolbarLayout, "已清空文本", Snackbar.LENGTH_LONG).setAction("恢复", new View.OnClickListener() {
                     @Override
@@ -711,7 +705,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
      * @param minute
      */
     private void startRemind(int year, int month, int day, int hour, int minute) {
-        Log.e("TAG", "startRemind()" + "已设置提醒" + mYear + "年" + month + "月" + day + "日" + " " + hour + ":" + minute);
         //得到日历实例，主要是为了下面的获取时间
         Calendar mCalendar = Calendar.getInstance();
 //        mCalendar.setTimeInMillis(System.currentTimeMillis());
@@ -829,7 +822,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                         if (note.getMinuteRemind() <= calendar.get(Calendar.MINUTE)) {
                             Toast.makeText(this, "请选择大于当前的时间", Toast.LENGTH_SHORT).show();
                             stopRemind(nowId);
-//                            textView_toolbar.setText("明天" + note.getHourRemind() + ":" + note.getMinuteRemind());
                         } else {
                             textView_toolbar.setText(note.getMinuteRemind() - calendar.get(Calendar.MINUTE) + "分钟后");
                         }
@@ -837,7 +829,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                         if (note.getHourRemind() <= calendar.get(Calendar.HOUR_OF_DAY)) {
                             Toast.makeText(this, "请选择大于当前的时间", Toast.LENGTH_SHORT).show();
                             stopRemind(nowId);
-//                            textView_toolbar.setText("明天" + note.getHourRemind() + ":" + note.getMinuteRemind());
                         } else {
                             textView_toolbar.setText("今天" + hour + ":" + minute);
                         }
@@ -918,7 +909,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
     }
 
 
-
     /**
      * 监听布局改变(监听软键盘)
      *
@@ -935,7 +925,7 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
     @Override
     public void onLayoutChange(View v, int left, int top, int right, int bottom,
                                int oldLeft, int oldTop, int oldRight, int oldBottom) {
-        if (TextColor != null){
+        if (TextColor != null) {
             richText.setTextColor(Color.parseColor(TextColor));
         }
         //现在认为只要控件将Activity向上推的高度超过了1/3屏幕高，就认为软键盘弹起
@@ -944,14 +934,28 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
             scrollview_bottomttoolbaar.setVisibility(View.VISIBLE);
             richText_Height = richText.getHeight();
             richText_MeasuredHeight = richText.getMeasuredHeight();
-            if (screenHeight / 2 < onTouch_getRawY) {
-//                scrollview_newnote.scrollTo(0, screenHeight / 2 + (onTouch_getRawY - screenHeight));
-                scrollview_newnote.scrollTo(0, onTouch_getY - (screenHeight / 4));
+            //字数小于等于两百的
+            if (richText.getHtml().length() <= 200) {
+                if (screenHeight / 2 < onTouch_getRawY) {
+                    //触碰点大于屏幕一半
+                    scrollview_newnote.scrollTo(0, onTouch_getY - (screenHeight / 1));
+                } else {
+                    //触碰点小于于屏幕一半
+                    scrollview_newnote.scrollTo(0, onTouch_getY - (screenHeight / 1));
+                }
+            } else {
+                //字数大于两百的
+                if (screenHeight / 2 < onTouch_getRawY) {
+                    //触碰点大于屏幕一半
+                    scrollview_newnote.scrollTo(0, onTouch_getY - (screenHeight / 4));
+                } else {
+                    //触碰点小于于屏幕一半
+                    scrollview_newnote.scrollTo(0, onTouch_getY - (screenHeight / 4));
+                }
             }
 
-//            scrollview_newnote.scrollTo(bottom, right);
-            //软键盘关闭
         } else if (oldBottom != 0 && bottom != 0 && (bottom - oldBottom > keyHeight)) {
+            //软键盘关闭
             appbarlayout_newnote.setExpanded(true);
             scrollview_bottomttoolbaar.setVisibility(View.GONE);
         }
@@ -962,15 +966,12 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
      * 触摸事件
      */
     private class mOnTouchListener implements View.OnTouchListener {
-
         @Override
         public boolean onTouch(View v, MotionEvent event) {
             switch (v.getId()) {
                 case R.id.richedit_newnote_content:
                     onTouch_getRawY = (int) event.getRawY();
                     onTouch_getY = (int) event.getY();
-                    Log.e("TAG", "onTouchEvent: Y=" + onTouch_getRawY);
-                    Log.e("TAG", "onTouchEvent: Y=" + onTouch_getY);
                     break;
             }
             return false;
@@ -988,18 +989,15 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                 case R.id.imgbtn_break:
                     richText.undo();
                     imgbtn_rebreak.setVisibility(View.VISIBLE);
-                    Log.e("TAG", "onClick: imgbtn_break");
                     break;
                 //重做
                 case R.id.imgbtn_rebreak:
                     richText.redo();
                     imgbtn_break.setVisibility(View.VISIBLE);
-                    Log.e("TAG", "onClick: imgbtn_break");
                     break;
                 //插入图片
                 case R.id.imgbtn_image:
                     //获取焦点
-                    Log.e("TAG", "onClick: imgbtn_image");
                     if (Build.VERSION.SDK_INT >= 24) {
                         List<String> permissionList = new ArrayList<>();
                         if (ContextCompat.checkSelfPermission(NewNote.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -1034,7 +1032,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                 //粗体
                 case R.id.imgbtn_bold:
                     richText.setBold();
-                    Log.e("TAG", "!!!!!!!!!!!!!imgbtn_bold");
                     break;
                 //斜体
                 case R.id.imgbtn_italic:
@@ -1052,7 +1049,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                     if (FONTSIZE == 7) {
                         FONTSIZE = 3;
                     }
-                    Log.e("TAG", "!!!!!!!!!!!!!FONTSIZE = " + FONTSIZE);
                     break;
                 case R.id.imgbtn_insertlink:
                     richText.insertLink("", "");
@@ -1073,7 +1069,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
                             opeAdvancenDialog();
                         }
                     }
-                    Log.e("TAG", "!!!!!!!!!!!!!!到末尾啦" );
                     isChanged_TextColor = !isChanged_TextColor;
                     break;
                 case R.id.imgbtn_textbackgroundcolor:
@@ -1102,7 +1097,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
      * 弹出颜色选择dialog
      */
     private void opeAdvancenDialog() {
-        Log.e("TAG", "!!!!!!!!!!!!!进入颜色选择器啦");
         //隐藏窗口
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(richText.getWindowToken(), 0);
@@ -1110,21 +1104,20 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
         //传入的默认color
         ColorPickerDialog colorPickerDialog = ColorPickerDialog.newBuilder().setColor(color)
                 .setDialogTitle(R.string.cpv_default_title)
-        //设置dialog标题
+                //设置dialog标题
                 .setDialogType(ColorPickerDialog.TYPE_PRESETS)
-        //设置为自定义模式
+                //设置为自定义模式
                 .setShowAlphaSlider(true)
-        //设置有透明度模式，默认没有透明度
+                //设置有透明度模式，默认没有透明度
                 .setDialogId(DIALGE_ID)
-        //设置Id,回调时传回用于判断
+                //设置Id,回调时传回用于判断
                 .setAllowPresets(true)
-        //不显示预知模式
+                //不显示预知模式
                 .create();
         //Buider创建
         colorPickerDialog.setColorPickerDialogListener(new ColorPickerDialogListener() {
             @Override
             public void onColorSelected(int dialogId, int color) {
-                Log.e("TAG", "!!!!!!!!!选择了颜色啦");
                 if (dialogId == DIALGE_ID) {
                     richText.setTextColor(Color.parseColor("#" + Integer.toHexString(color)));
                     TextColor = "#" + Integer.toHexString(color);
@@ -1172,7 +1165,6 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
         if (requestCode == REQUEST_CODE_CHOOSE && resultCode == RESULT_OK) {
             mSelected = Matisse.obtainResult(data);
             for (Uri uri : mSelected) {
-                Log.e("TAG", "------------------------得到选择对象" + "  uri: " + uri.toString());
                 //压缩图片
                 imageCompression(uri);
             }
@@ -1185,48 +1177,41 @@ public class NewNote extends AppCompatActivity implements View.OnLayoutChangeLis
      * @param uri
      */
     private void imageCompression(Uri uri) {
-
-        Log.e("TAG", "--------------------进入方法成功");
         if (uri.toString().indexOf("content://media/") != -1) {
             //uri路径为相相册时
             File file = new File(UriToPath.getRealFilePath(this, uri));
             File compressedImageFile = null;
             try {
                 compressedImageFile = new Compressor(this)
-                        .setMaxWidth(240)
-                        .setMaxHeight(200)
-                        .setQuality(80)
-                        .setCompressFormat(Bitmap.CompressFormat.JPEG)
-                        .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
-                                Environment.DIRECTORY_PICTURES).getAbsolutePath())
-                        .compressToFile(file);
-                Toast.makeText(this, "压缩成功", Toast.LENGTH_SHORT).show();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            richText.insertImage(compressedImageFile.toString(), "image_1");
-            saveUri = compressedImageFile.toString();
-            Log.e("TAG", "------------------------最终设置的选择对象" + " uri: " + compressedImageFile.toString());
-        } else {
-            //uri路径为相机时
-            Log.e("TAG", "-----------------------uri路径为相机时,转换后的 uri : " + UriToPath.getCameraUriToPath(uri));
-            File file = new File(UriToPath.getCameraUriToPath(uri));
-            File compressedImageFile = null;
-            try {
-                compressedImageFile = new Compressor(this)
-                        .setMaxWidth(240)
-                        .setMaxHeight(200)
+                        .setMaxWidth(640)
+                        .setMaxHeight(480)
                         .setQuality(100)
                         .setCompressFormat(Bitmap.CompressFormat.JPEG)
                         .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
                                 Environment.DIRECTORY_PICTURES).getAbsolutePath())
                         .compressToFile(file);
-                Toast.makeText(this, "压缩成功", Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            Log.e("TAG", "------------------------最终设置的选择对象" + "  uri: " + compressedImageFile.toString());
-            richText.insertImage(compressedImageFile.toString(), "image_1");
+            richText.insertImage(compressedImageFile.toString(), "insertImage");
+            saveUri = compressedImageFile.toString();
+        } else {
+            //uri路径为相机时
+            File file = new File(UriToPath.getCameraUriToPath(uri));
+            File compressedImageFile = null;
+            try {
+                compressedImageFile = new Compressor(this)
+                        .setMaxWidth(640)
+                        .setMaxHeight(480)
+                        .setQuality(100)
+                        .setCompressFormat(Bitmap.CompressFormat.JPEG)
+                        .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
+                                Environment.DIRECTORY_PICTURES).getAbsolutePath())
+                        .compressToFile(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            richText.insertImage(compressedImageFile.toString(), "insertImage");
             file.delete();
             saveUri = compressedImageFile.toString();
         }

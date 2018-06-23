@@ -177,4 +177,16 @@ public class ContentUtil {
         return temp;
     }
 
+    /**
+     * 替换内容
+     * @param regex 要替换的内容
+     * @param replacement 替换的内容
+     * @return
+     */
+    public static String replaceContent(String content, String regex, String replacement){
+        String temp = content;
+        temp = temp.replaceAll(regex, replacement);
+        return temp;
+    }
+
 }
