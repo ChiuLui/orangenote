@@ -242,19 +242,16 @@ public class CopyrightActivity extends AppCompatActivity implements View.OnClick
                                                 .setPositiveButton("去好评", new DialogInterface.OnClickListener() {
                                                     @Override
                                                     public void onClick(DialogInterface dialog, int which) {
-                                                        //获取当前手机有的市场
-                                                        ArrayList<String> myMarkets = queryInstalledMarketPkgs(CopyrightActivity.this);
-                                                        for (String myMarket : myMarkets) {
-                                                            Log.e("TAG", "!!!!!!当前手机有的市场="+myMarket);
-                                                        }
-                                                        for (String myMarket : myMarkets) {
                                                             //获取应用上架的市场
                                                             List<String> marketList = checkUpDate.getMarketList();
                                                             for (String market : marketList) {
+                                                                //获取当前手机有的应用
+                                                                ArrayList<String> myMarkets = queryInstalledMarketPkgs(CopyrightActivity.this);
+                                                                for (String myMarket : myMarkets) {
                                                                 //如果手机中有应用上架的市场
-                                                                if (myMarket.equals(market)) {
+                                                                if (market.equals(myMarket)) {
                                                                     //跳转
-                                                                    openApplicationMarket(CopyrightActivity.this.getPackageName(), myMarket, checkUpDate.getPageURL());
+                                                                    openApplicationMarket(CopyrightActivity.this.getPackageName(), market, checkUpDate.getPageURL());
                                                                     return;
                                                                 }
                                                             }
@@ -281,6 +278,9 @@ public class CopyrightActivity extends AppCompatActivity implements View.OnClick
                                                     public void onClick(DialogInterface dialog, int which) {
                                                         //获取当前手机有得市场
                                                         ArrayList<String> myMarkets = queryInstalledMarketPkgs(CopyrightActivity.this);
+                                                        for (String myMarket : myMarkets) {
+                                                            Log.e("TAG", "!!!!!!当前手机有的市场="+myMarket);
+                                                        }
                                                         for (String myMarket : myMarkets) {
                                                             //获取应用上架的市场
                                                             List<String> marketList = checkUpDate.getMarketList();
@@ -326,7 +326,8 @@ public class CopyrightActivity extends AppCompatActivity implements View.OnClick
             return pkgs;
         Intent intent = new Intent();
         intent.setAction("android.intent.action.MAIN");
-        intent.addCategory("android.intent.category.APP_MARKET");
+//        intent.addCategory(Intent.CATEGORY_APP_MARKET);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
         PackageManager pm = context.getPackageManager();
         List<ResolveInfo> infos = pm.queryIntentActivities(intent, 0);
         if (infos == null || infos.size() == 0)

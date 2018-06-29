@@ -48,6 +48,7 @@
                     android:layout_height="wrap_content"
                     android:background="?attr/color_bg_item"
                     android:layout_marginRight="20dp"
+                    android:hint="搜索便签"
                     android:textColor="?attr/color_text_content"/>
             </LinearLayout>
 

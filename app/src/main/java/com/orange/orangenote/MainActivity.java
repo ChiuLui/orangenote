@@ -302,6 +302,12 @@ public class MainActivity extends AppCompatActivity implements ViewAnimator.View
                 adapter = new NoteAdapter(MainActivity.this, noteList);
                 recyclerView.setAdapter(adapter);
                 adapter.notifyDataSetChanged();
+                if (isListView) {
+                    recyclerView.setLayoutManager(linearLayoutManager);
+                } else {
+                    recyclerView.setLayoutManager(linearLayoutManager);
+                    recyclerView.setLayoutManager(staggeredGridLayoutManager);
+                }
             }
 
             @Override
