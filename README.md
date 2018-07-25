@@ -6,12 +6,17 @@
 <img src="https://img.shields.io/badge/mail-906277645%40qq.com-orange.svg">
 </div>
 
+</br>
+
 <div align="center">
 <img src="https://github.com/ChiuLui/orangenote/blob/master/preview/OrangeNote.png">
 </div>
 
+</br>
+
 ##### 橙子便签一款极简易用体积小的便签APP.
 项目基于Material Design + OKHTTP3 + GSON + LitePal + Glide
+
 ### 功能介绍
 橙子便签是一款极简的记事本应用.
 从界面到开发遵循简单,易用原则.
@@ -62,6 +67,9 @@
 
 ### 素材
 大部分icon素材取自 [Iconfont-阿里巴巴矢量图标库](http://www.iconfont.cn)
+
+### APK
+[橙子便签下载地址](https://www.coolapk.com/apk/190837)
 
 ### 预览
 <div align="center">
