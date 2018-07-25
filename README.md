@@ -1,4 +1,10 @@
-# OrangeNote
+<h1 align="center">OrangeNote</h1>
+
+<div align="center">
+<img src="https://img.shields.io/badge/License-Apache2.0-green.svg">
+<img src="https://img.shields.io/badge/API-23%2B-blue.svg">
+<img src="https://img.shields.io/badge/mail-906277645%40qq.com-orange.svg">
+</div>
 
 <div align="center">
 <img src="https://github.com/ChiuLui/orangenote/blob/master/preview/OrangeNote.png">
@@ -63,9 +69,9 @@
 </div>
 
 <div align="center">
-<img src="https://github.com/ChiuLui/orangenote/blob/master/preview/3.png"><img src="https://github.com/ChiuLui/orangenote/blob/master/preview/6.png">
+<img src="https://github.com/ChiuLui/orangenote/blob/master/preview/3.png" width="50%"><img src="https://github.com/ChiuLui/orangenote/blob/master/preview/6.png" width="50%">
 </div>
 
 <div align="center">
-<img src="https://github.com/ChiuLui/orangenote/blob/master/preview/4.png"><img src="https://github.com/ChiuLui/orangenote/blob/master/preview/7.png">
+<img src="https://github.com/ChiuLui/orangenote/blob/master/preview/4.png" width="50%"><img src="https://github.com/ChiuLui/orangenote/blob/master/preview/7.png" width="50%">
 </div>
