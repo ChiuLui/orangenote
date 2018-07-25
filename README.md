@@ -59,7 +59,7 @@
 
 ### 预览
 <div align="center">
-<img src="https://github.com/ChiuLui/orangenote/blob/master/preview/1.png"><img src="https://github.com/ChiuLui/orangenote/blob/master/preview/5.png">
+<img src="https://github.com/ChiuLui/orangenote/blob/master/preview/1.png" width="50%"><img src="https://github.com/ChiuLui/orangenote/blob/master/preview/5.png" width="50%" >
 </div>
 
 <div align="center">
