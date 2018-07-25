@@ -1,7 +1,11 @@
 # OrangeNote
 
+<div align="center">
+<img src="https://github.com/ChiuLui/orangenote/blob/master/preview/OrangeNote.png">
+</div>
+
 ##### 橙子便签一款极简易用体积小的便签APP.
-Awesome WanAndroid项目基于Material Design + OKHTTP3 + GSON + LitePal + Glide
+项目基于Material Design + OKHTTP3 + GSON + LitePal + Glide
 ### 功能介绍
 橙子便签是一款极简的记事本应用.
 从界面到开发遵循简单,易用原则.
@@ -52,3 +56,16 @@ Awesome WanAndroid项目基于Material Design + OKHTTP3 + GSON + LitePal + Glide
 
 ### 素材
 大部分icon素材取自 [Iconfont-阿里巴巴矢量图标库](http://www.iconfont.cn)
+
+### 预览
+<div align="center">
+<img src="https://github.com/ChiuLui/orangenote/blob/master/preview/1.png"><img src="https://github.com/ChiuLui/orangenote/blob/master/preview/5.png">
+</div>
+
+<div align="center">
+<img src="https://github.com/ChiuLui/orangenote/blob/master/preview/3.png"><img src="https://github.com/ChiuLui/orangenote/blob/master/preview/6.png">
+</div>
+
+<div align="center">
+<img src="https://github.com/ChiuLui/orangenote/blob/master/preview/4.png"><img src="https://github.com/ChiuLui/orangenote/blob/master/preview/7.png">
+</div>
